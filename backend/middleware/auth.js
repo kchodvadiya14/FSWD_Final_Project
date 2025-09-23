@@ -138,11 +138,13 @@ export const optionalAuth = async (req, res, next) => {
 
 // Generate JWT token
 export const generateToken = (userId) => {
-  return jwt.sign(
+  const token = jwt.sign(
     { userId },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRE || '7d' }
   );
+  
+  return token;
 };
 
 // Verify token utility function

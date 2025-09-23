@@ -142,7 +142,7 @@ const Register = () => {
       };
 
       await register(registrationData);
-      navigate('/dashboard');
+      navigate('/login');
     } catch (error) {
       console.error('Registration failed:', error);
       // Error is already handled in AuthContext

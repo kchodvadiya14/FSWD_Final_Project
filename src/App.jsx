@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute, { PublicRoute } from './components/ProtectedRoute';
 import Layout from './components/Layout/Layout';
+import DebugAuth from './components/DebugAuth';
 
 // Import pages
 import Login from './pages/Login';
@@ -40,6 +41,9 @@ function App() {
               },
             }}
           />
+          
+          {/* Debug component - remove in production */}
+          <DebugAuth />
           
           <Routes>
             {/* Public Routes */}

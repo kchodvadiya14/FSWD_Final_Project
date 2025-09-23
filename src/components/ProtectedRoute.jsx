@@ -14,7 +14,7 @@ const LoadingSpinner = () => (
 
 // Protected route component
 const ProtectedRoute = ({ children, redirectTo = '/login' }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
   if (isLoading) {

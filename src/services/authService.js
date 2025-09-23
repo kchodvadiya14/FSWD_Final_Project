@@ -7,10 +7,8 @@ class AuthService {
       const response = await api.post('/auth/register', userData);
       const { data } = response.data;
       
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-      }
+      // Don't auto-store token after registration - require manual login
+      // User should log in manually after registration
       
       return data;
     } catch (error) {

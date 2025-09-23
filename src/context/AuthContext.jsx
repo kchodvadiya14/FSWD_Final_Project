@@ -160,14 +160,16 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: AUTH_ACTIONS.LOADING, payload: true });
       dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
+      // Clear any existing auth data before registration
+      authService.logout();
+
       const data = await authService.register(userData);
       
-      dispatch({
-        type: AUTH_ACTIONS.LOGIN_SUCCESS,
-        payload: data
-      });
+      // Don't auto-login after registration - user should login manually
+      dispatch({ type: AUTH_ACTIONS.LOADING, payload: false });
+      dispatch({ type: AUTH_ACTIONS.LOGOUT }); // Ensure user is not logged in
 
-      toast.success('Registration successful!');
+      toast.success('Registration successful! Please log in to continue.');
       return data;
     } catch (error) {
       console.log('🔍 Registration error details:', {
