@@ -22,7 +22,6 @@ const Sidebar = () => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
     { name: 'Workouts', href: '/workouts', icon: ChartBarIcon },
-    { name: 'Nutrition', href: '/nutrition', icon: HeartIcon },
     { name: 'Health Metrics', href: '/health', icon: ScaleIcon },
     { name: 'Progress', href: '/progress', icon: DocumentChartBarIcon },
     { name: 'Profile', href: '/profile', icon: UserIcon },

@@ -13,6 +13,8 @@ import Workouts from './pages/Workouts';
 import NewWorkout from './pages/NewWorkout';
 import Nutrition from './pages/Nutrition';
 import NewMeal from './pages/NewMeal';
+import HealthMetrics from './pages/HealthMetrics';
+import Progress from './pages/Progress';
 
 // Placeholder components for routes that aren't implemented yet
 const PlaceholderPage = ({ title }) => (
@@ -114,7 +116,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<PlaceholderPage title="Health Metrics" />} />
+              <Route index element={<HealthMetrics />} />
               <Route path="weight" element={<PlaceholderPage title="Weight Tracking" />} />
             </Route>
 
@@ -126,7 +128,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<PlaceholderPage title="Progress" />} />
+              <Route index element={<Progress />} />
             </Route>
 
             <Route 

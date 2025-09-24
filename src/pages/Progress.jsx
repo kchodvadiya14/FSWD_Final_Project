@@ -1,27 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+﻿import React, { useState } from 'react';
+import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
-  BarElement,
   Title,
   Tooltip,
   Legend,
-  ArcElement,
 } from 'chart.js';
-import { workoutService, nutritionService, goalService } from '../services/fitnessService';
-import { userService } from '../services/userService';
-import toast from 'react-hot-toast';
 import {
   ChartBarIcon,
-  TrendingUpIcon,
-  FireIcon,
-  CalendarIcon,
-  ClockIcon,
-  TargetIcon
+  ArrowTrendingUpIcon,
+  TrophyIcon,
+  StarIcon,
+  BoltIcon,
+  ScaleIcon
 } from '@heroicons/react/24/outline';
 
 // Register ChartJS components
@@ -30,163 +25,158 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
-  BarElement,
   Title,
   Tooltip,
-  Legend,
-  ArcElement
+  Legend
 );
 
 const Progress = () => {
-  const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState('30');
-  const [progressData, setProgressData] = useState({
-    workoutStats: null,
-    nutritionStats: null,
-    goals: [],
-    weightProgress: [],
-    workoutTrend: [],
-    nutritionTrend: []
-  });
+  const [timeRange, setTimeRange] = useState('weekly');
+  const [selectedMetric, setSelectedMetric] = useState('weight');
 
-  useEffect(() => {
-    fetchAllData();
-  }, [timeRange]);
-
-  const fetchAllData = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch workout statistics
-      const workoutStats = await workoutService.getWorkoutStats(timeRange);
-      
-      // Fetch goals
-      const goalsData = await goalService.getGoals();
-      
-      // Simulate weight progress and trends (in a real app, these would come from the backend)
-      const weightProgress = generateMockWeightData();
-      const workoutTrend = generateMockWorkoutTrend();
-      const nutritionTrend = generateMockNutritionTrend();
-
-      setProgressData({
-        workoutStats: workoutStats.data,
-        goals: goalsData.data || [],
-        weightProgress,
-        workoutTrend,
-        nutritionTrend
-      });
-    } catch (error) {
-      console.error('Failed to fetch progress data:', error);
-      toast.error('Failed to load progress data');
-    } finally {
-      setLoading(false);
+  // Mock progress data
+  const progressData = {
+    weight: {
+      current: 73.5,
+      start: 75.2,
+      goal: 70.0,
+      change: -1.7,
+      data: [75.2, 74.8, 74.5, 74.3, 74.1, 73.9, 73.5]
+    },
+    steps: {
+      current: 8247,
+      goal: 10000,
+      average: 7823,
+      data: [7500, 8200, 9100, 8800, 7200, 9500, 8247],
+      streak: 12
+    },
+    workouts: {
+      thisWeek: 4,
+      lastWeek: 3,
+      streak: 8,
+      total: 42,
+      data: [3, 4, 2, 5, 4, 3, 4]
+    },
+    calories: {
+      burned: 2340,
+      goal: 2500,
+      data: [2100, 2340, 2580, 2200, 1980, 2650, 2340]
+    },
+    sleep: {
+      average: 7.4,
+      goal: 8.0,
+      quality: 85,
+      data: [7.2, 8.1, 6.8, 7.9, 6.5, 8.3, 7.4]
     }
   };
 
-  // Mock data generators (replace with real API calls)
-  const generateMockWeightData = () => {
-    const data = [];
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - parseInt(timeRange));
-    
-    for (let i = 0; i < parseInt(timeRange); i += 3) {
-      const date = new Date(startDate);
-      date.setDate(date.getDate() + i);
-      data.push({
-        date: date.toISOString().split('T')[0],
-        weight: 75 + (Math.random() - 0.5) * 2 // Random weight around 75kg
-      });
+  // Achievements and milestones
+  const achievements = [
+    {
+      id: 1,
+      title: "Weight Loss Champion",
+      description: "Lost 5 pounds in 30 days",
+      icon: ScaleIcon,
+      color: "text-green-600",
+      bgColor: "bg-green-100",
+      date: "2 days ago",
+      completed: true
+    },
+    {
+      id: 2,
+      title: "Workout Warrior",
+      description: "7 day workout streak",
+      icon: BoltIcon,
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-100",
+      date: "1 week ago",
+      completed: true
+    },
+    {
+      id: 3,
+      title: "Step Master",
+      description: "10,000 steps daily for 14 days",
+      icon: ArrowTrendingUpIcon,
+      color: "text-blue-600",
+      bgColor: "bg-blue-100",
+      date: "3 days ago",
+      completed: true
+    },
+    {
+      id: 4,
+      title: "Sleep Champion",
+      description: "8+ hours sleep for 5 nights",
+      icon: StarIcon,
+      color: "text-purple-600",
+      bgColor: "bg-purple-100",
+      date: "In progress",
+      completed: false
     }
-    return data;
-  };
+  ];
 
-  const generateMockWorkoutTrend = () => {
-    const data = [];
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - parseInt(timeRange));
-    
-    for (let i = 0; i < parseInt(timeRange); i += 7) {
-      const date = new Date(startDate);
-      date.setDate(date.getDate() + i);
-      data.push({
-        week: date.toLocaleDateString(),
-        workouts: Math.floor(Math.random() * 5) + 1,
-        calories: Math.floor(Math.random() * 2000) + 1000
-      });
+  const streaks = [
+    {
+      type: "Workouts",
+      current: 8,
+      best: 15,
+      icon: BoltIcon,
+      color: "text-orange-600"
+    },
+    {
+      type: "Steps Goal",
+      current: 12,
+      best: 23,
+      icon: ArrowTrendingUpIcon,
+      color: "text-blue-600"
+    },
+    {
+      type: "Sleep Goal",
+      current: 3,
+      best: 9,
+      icon: StarIcon,
+      color: "text-purple-600"
     }
-    return data;
+  ];
+
+  // Chart data configuration
+  const getChartData = () => {
+    const labels = timeRange === 'weekly' 
+      ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+      : timeRange === 'monthly'
+      ? ['Week 1', 'Week 2', 'Week 3', 'Week 4']
+      : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const data = progressData[selectedMetric]?.data || [];
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: selectedMetric.charAt(0).toUpperCase() + selectedMetric.slice(1),
+          data: data,
+          borderColor: getMetricColor(selectedMetric),
+          backgroundColor: getMetricColor(selectedMetric, 0.1),
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: getMetricColor(selectedMetric),
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 6
+        }
+      ]
+    };
   };
 
-  const generateMockNutritionTrend = () => {
-    const data = [];
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - parseInt(timeRange));
-    
-    for (let i = 0; i < parseInt(timeRange); i += 7) {
-      const date = new Date(startDate);
-      date.setDate(date.getDate() + i);
-      data.push({
-        week: date.toLocaleDateString(),
-        calories: Math.floor(Math.random() * 500) + 1800,
-        protein: Math.floor(Math.random() * 50) + 100,
-        carbs: Math.floor(Math.random() * 100) + 200,
-        fats: Math.floor(Math.random() * 30) + 60
-      });
-    }
-    return data;
-  };
-
-  // Chart configurations
-  const weightChartData = {
-    labels: progressData.weightProgress.map(d => new Date(d.date).toLocaleDateString()),
-    datasets: [
-      {
-        label: 'Weight (kg)',
-        data: progressData.weightProgress.map(d => d.weight),
-        borderColor: 'rgb(79, 70, 229)',
-        backgroundColor: 'rgba(79, 70, 229, 0.1)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.3
-      }
-    ]
-  };
-
-  const workoutTrendData = {
-    labels: progressData.workoutTrend.map(d => d.week),
-    datasets: [
-      {
-        label: 'Workouts',
-        data: progressData.workoutTrend.map(d => d.workouts),
-        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-        borderColor: 'rgb(59, 130, 246)',
-        borderWidth: 1
-      }
-    ]
-  };
-
-  const nutritionPieData = {
-    labels: ['Protein', 'Carbs', 'Fats'],
-    datasets: [
-      {
-        data: [
-          progressData.nutritionTrend.reduce((sum, d) => sum + d.protein, 0),
-          progressData.nutritionTrend.reduce((sum, d) => sum + d.carbs, 0),
-          progressData.nutritionTrend.reduce((sum, d) => sum + d.fats, 0)
-        ],
-        backgroundColor: [
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(34, 197, 94, 0.8)',
-          'rgba(251, 191, 36, 0.8)'
-        ],
-        borderColor: [
-          'rgb(59, 130, 246)',
-          'rgb(34, 197, 94)',
-          'rgb(251, 191, 36)'
-        ],
-        borderWidth: 2
-      }
-    ]
+  const getMetricColor = (metric, opacity = 1) => {
+    const colors = {
+      weight: `rgba(239, 68, 68, ${opacity})`,
+      steps: `rgba(59, 130, 246, ${opacity})`,
+      workouts: `rgba(34, 197, 94, ${opacity})`,
+      calories: `rgba(245, 158, 11, ${opacity})`,
+      sleep: `rgba(147, 51, 234, ${opacity})`
+    };
+    return colors[metric] || `rgba(107, 114, 128, ${opacity})`;
   };
 
   const chartOptions = {
@@ -194,232 +184,308 @@ const Progress = () => {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top',
+        display: false
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        borderColor: getMetricColor(selectedMetric),
+        borderWidth: 1
       }
     },
     scales: {
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          color: '#6b7280'
+        }
+      },
       y: {
-        beginAtZero: true
+        grid: {
+          color: 'rgba(0, 0, 0, 0.1)'
+        },
+        ticks: {
+          color: '#6b7280'
+        }
       }
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Progress Tracking</h1>
-          <p className="text-gray-600">Monitor your fitness journey and achievements</p>
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Progress Tracking</h1>
+            <p className="text-gray-600">Monitor your fitness journey and celebrate achievements</p>
+          </div>
+          
+          {/* Time Range Toggle */}
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            {[
+              { value: 'weekly', label: 'Week' },
+              { value: 'monthly', label: 'Month' },
+              { value: 'yearly', label: 'Year' }
+            ].map((range) => (
+              <button
+                key={range.value}
+                onClick={() => setTimeRange(range.value)}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  timeRange === range.value
+                    ? 'bg-white text-indigo-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {range.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <select
-          value={timeRange}
-          onChange={(e) => setTimeRange(e.target.value)}
-          className="border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-        >
-          <option value="7">Last 7 days</option>
-          <option value="30">Last 30 days</option>
-          <option value="90">Last 3 months</option>
-          <option value="365">Last year</option>
-        </select>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Key Metrics Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-indigo-100 rounded-lg">
-              <ChartBarIcon className="h-6 w-6 text-indigo-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Workouts</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {progressData.workoutStats?.summary?.totalWorkouts || 0}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Weight Progress</p>
+              <p className="text-2xl font-bold text-gray-900">{progressData.weight.current} kg</p>
+              <p className="text-sm text-green-600 flex items-center mt-1">
+                <ArrowTrendingUpIcon className="h-4 w-4 mr-1" />
+                {Math.abs(progressData.weight.change)} kg lost
               </p>
             </div>
+            <div className="p-3 bg-red-100 rounded-lg">
+              <ScaleIcon className="h-8 w-8 text-red-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Daily Steps</p>
+              <p className="text-2xl font-bold text-gray-900">{progressData.steps.current.toLocaleString()}</p>
+              <p className="text-sm text-blue-600 flex items-center mt-1">
+                <BoltIcon className="h-4 w-4 mr-1" />
+                {progressData.steps.streak} day streak
+              </p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <ChartBarIcon className="h-8 w-8 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Workouts This Week</p>
+              <p className="text-2xl font-bold text-gray-900">{progressData.workouts.thisWeek}</p>
+              <p className="text-sm text-green-600 flex items-center mt-1">
+                <TrophyIcon className="h-4 w-4 mr-1" />
+                {progressData.workouts.streak} day streak
+              </p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-lg">
+              <BoltIcon className="h-8 w-8 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Sleep Average</p>
+              <p className="text-2xl font-bold text-gray-900">{progressData.sleep.average}h</p>
+              <p className="text-sm text-purple-600 flex items-center mt-1">
+                <StarIcon className="h-4 w-4 mr-1" />
+                {progressData.sleep.quality}% quality
+              </p>
+            </div>
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <StarIcon className="h-8 w-8 text-purple-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress Chart */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">Progress Trends</h2>
+          
+          {/* Metric Selector */}
+          <div className="flex space-x-2">
+            {[
+              { value: 'weight', label: 'Weight', color: 'text-red-600' },
+              { value: 'steps', label: 'Steps', color: 'text-blue-600' },
+              { value: 'workouts', label: 'Workouts', color: 'text-green-600' },
+              { value: 'calories', label: 'Calories', color: 'text-yellow-600' },
+              { value: 'sleep', label: 'Sleep', color: 'text-purple-600' }
+            ].map((metric) => (
+              <button
+                key={metric.value}
+                onClick={() => setSelectedMetric(metric.value)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  selectedMetric === metric.value
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                {metric.label}
+              </button>
+            ))}
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <FireIcon className="h-6 w-6 text-red-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Calories Burned</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {progressData.workoutStats?.summary?.totalCalories || 0}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <ClockIcon className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Exercise Time</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {Math.round((progressData.workoutStats?.summary?.totalDuration || 0) / 60)}h
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <TargetIcon className="h-6 w-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Active Goals</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {progressData.goals.filter(g => g.status === 'active').length}
-              </p>
-            </div>
-          </div>
+        <div className="h-80">
+          <Line data={getChartData()} options={chartOptions} />
         </div>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Weight Progress */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Weight Progress</h3>
-          <div className="h-64">
-            <Line data={weightChartData} options={chartOptions} />
-          </div>
-        </div>
-
-        {/* Workout Frequency */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Weekly Workout Frequency</h3>
-          <div className="h-64">
-            <Bar data={workoutTrendData} options={chartOptions} />
-          </div>
-        </div>
-
-        {/* Nutrition Distribution */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Macronutrient Distribution</h3>
-          <div className="h-64">
-            <Doughnut 
-              data={nutritionPieData} 
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: 'bottom'
-                  }
-                }
-              }} 
-            />
-          </div>
-        </div>
-
-        {/* Goals Progress */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Goals Progress</h3>
-          <div className="space-y-4">
-            {progressData.goals.slice(0, 4).map((goal) => (
-              <div key={goal._id} className="border-b border-gray-200 pb-4 last:border-b-0">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="text-sm font-medium text-gray-900">{goal.title}</h4>
-                  <span className="text-sm text-gray-500">
-                    {Math.round(goal.progressPercentage || 0)}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-indigo-600 h-2 rounded-full"
-                    style={{ width: `${Math.min(goal.progressPercentage || 0, 100)}%` }}
-                  ></div>
-                </div>
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>{goal.currentValue} {goal.unit}</span>
-                  <span>{goal.targetValue} {goal.unit}</span>
-                </div>
-              </div>
-            ))}
-            {progressData.goals.length === 0 && (
-              <p className="text-gray-500 text-center py-4">No goals set yet</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Achievements */}
+      {/* Achievements & Milestones */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Achievements</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-full">
-                <TrendingUpIcon className="h-5 w-5 text-yellow-600" />
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Recent Achievements</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {achievements.map((achievement) => {
+            const Icon = achievement.icon;
+            return (
+              <div key={achievement.id} className={`p-4 rounded-lg border-2 ${
+                achievement.completed 
+                  ? 'border-green-200 bg-green-50' 
+                  : 'border-gray-200 bg-gray-50'
+              }`}>
+                <div className="flex items-start space-x-3">
+                  <div className={`p-2 rounded-lg ${achievement.bgColor}`}>
+                    <Icon className={`h-6 w-6 ${achievement.color}`} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-gray-900">{achievement.title}</h3>
+                      {achievement.completed && (
+                        <TrophyIcon className="h-5 w-5 text-yellow-500" />
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">{achievement.description}</p>
+                    <p className="text-xs text-gray-500 mt-2">{achievement.date}</p>
+                  </div>
+                </div>
               </div>
-              <div className="ml-3">
-                <h4 className="text-sm font-medium text-yellow-800">Consistency</h4>
-                <p className="text-xs text-yellow-600">7 days workout streak!</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-full">
-                <FireIcon className="h-5 w-5 text-green-600" />
-              </div>
-              <div className="ml-3">
-                <h4 className="text-sm font-medium text-green-800">Calorie Burn</h4>
-                <p className="text-xs text-green-600">1000+ calories in a session</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-full">
-                <TargetIcon className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="ml-3">
-                <h4 className="text-sm font-medium text-blue-800">Goal Achieved</h4>
-                <p className="text-xs text-blue-600">Weight loss milestone reached</p>
-              </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Weekly Summary */}
+      {/* Streaks Section */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">This Week's Summary</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">5</div>
-            <div className="text-sm text-gray-600">Workouts</div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Current Streaks</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {streaks.map((streak, index) => {
+            const Icon = streak.icon;
+            const percentage = Math.round((streak.current / streak.best) * 100);
+            return (
+              <div key={index} className="text-center">
+                <div className="flex justify-center mb-3">
+                  <div className={`p-3 rounded-full ${streak.color.replace('text-', 'bg-').replace('-600', '-100')}`}>
+                    <Icon className={`h-8 w-8 ${streak.color}`} />
+                  </div>
+                </div>
+                <h3 className="font-semibold text-gray-900">{streak.type}</h3>
+                <div className="mt-2">
+                  <span className="text-3xl font-bold text-gray-900">{streak.current}</span>
+                  <span className="text-sm text-gray-600 ml-1">days</span>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">Best: {streak.best} days</p>
+                
+                {/* Progress Ring */}
+                <div className="mt-4 flex justify-center">
+                  <div className="relative w-16 h-16">
+                    <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#e5e7eb"
+                        strokeWidth="3"
+                      />
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke={streak.color === 'text-orange-600' ? '#ea580c' : streak.color === 'text-blue-600' ? '#2563eb' : '#9333ea'}
+                        strokeWidth="3"
+                        strokeDasharray={`${percentage}, 100`}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-xs font-medium text-gray-600">
+                        {percentage}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Goal Progress */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Goal Progress</h2>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <ScaleIcon className="h-6 w-6 text-red-600" />
+              <div>
+                <h3 className="font-medium text-gray-900">Weight Loss Goal</h3>
+                <p className="text-sm text-gray-600">Target: 70 kg</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-semibold text-gray-900">73.5 kg</p>
+              <div className="w-32 bg-gray-200 rounded-full h-2 mt-1">
+                <div className="bg-red-500 h-2 rounded-full" style={{ width: '67%' }}></div>
+              </div>
+              <p className="text-xs text-gray-600 mt-1">67% complete</p>
+            </div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">3.2</div>
-            <div className="text-sm text-gray-600">Hours</div>
+
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <ChartBarIcon className="h-6 w-6 text-blue-600" />
+              <div>
+                <h3 className="font-medium text-gray-900">Daily Steps</h3>
+                <p className="text-sm text-gray-600">Target: 10,000 steps</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-semibold text-gray-900">8,247</p>
+              <div className="w-32 bg-gray-200 rounded-full h-2 mt-1">
+                <div className="bg-blue-500 h-2 rounded-full" style={{ width: '82%' }}></div>
+              </div>
+              <p className="text-xs text-gray-600 mt-1">82% complete</p>
+            </div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">2,450</div>
-            <div className="text-sm text-gray-600">Calories</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">85%</div>
-            <div className="text-sm text-gray-600">Goal Progress</div>
+
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <StarIcon className="h-6 w-6 text-purple-600" />
+              <div>
+                <h3 className="font-medium text-gray-900">Sleep Goal</h3>
+                <p className="text-sm text-gray-600">Target: 8 hours</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-semibold text-gray-900">7.4h</p>
+              <div className="w-32 bg-gray-200 rounded-full h-2 mt-1">
+                <div className="bg-purple-500 h-2 rounded-full" style={{ width: '93%' }}></div>
+              </div>
+              <p className="text-xs text-gray-600 mt-1">93% complete</p>
+            </div>
           </div>
         </div>
       </div>
