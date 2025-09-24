@@ -21,19 +21,26 @@ const Workouts = () => {
   });
   const [stats, setStats] = useState(null);
 
-  useEffect(() => {
-    fetchWorkouts();
-    fetchStats();
-  }, [filters]);
-
   const fetchWorkouts = async () => {
     try {
       setLoading(true);
-      const data = await workoutService.getWorkouts(filters);
-      setWorkouts(data.workouts || []);
+      console.log('🔍 Fetching workouts with filters:', filters);
+      const response = await workoutService.getWorkouts(filters);
+      console.log('📦 Raw workout response:', response);
+      
+      // Backend returns: { success: true, data: { workouts: [...], pagination: {...} } }
+      const workoutsData = response.data?.workouts || response.workouts || [];
+      console.log('✅ Extracted workouts:', workoutsData);
+      
+      setWorkouts(workoutsData);
     } catch (error) {
-      console.error('Failed to fetch workouts:', error);
-      toast.error('Failed to load workouts');
+      console.error('❌ Failed to fetch workouts:', error);
+      console.error('Error details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      toast.error(error.response?.data?.message || 'Failed to load workouts');
     } finally {
       setLoading(false);
     }
@@ -41,12 +48,24 @@ const Workouts = () => {
 
   const fetchStats = async () => {
     try {
-      const data = await workoutService.getWorkoutStats();
-      setStats(data.data);
+      console.log('📊 Fetching workout stats...');
+      const response = await workoutService.getWorkoutStats();
+      console.log('📈 Raw stats response:', response);
+      
+      // Extract stats data properly
+      const statsData = response.data || response;
+      console.log('✅ Extracted stats:', statsData);
+      
+      setStats(statsData);
     } catch (error) {
-      console.error('Failed to fetch workout stats:', error);
+      console.error('❌ Failed to fetch workout stats:', error);
     }
   };
+
+  useEffect(() => {
+    fetchWorkouts();
+    fetchStats();
+  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDeleteWorkout = async (id) => {
     if (!window.confirm('Are you sure you want to delete this workout?')) {
@@ -95,15 +114,29 @@ const Workouts = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Workouts</h1>
-          <p className="text-gray-600">Track and manage your fitness sessions</p>
+          <p className="text-gray-600">
+            Track and manage your fitness sessions 
+            {workouts.length > 0 && <span className="font-medium">({workouts.length} found)</span>}
+          </p>
         </div>
-        <Link
-          to="/workouts/new"
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center gap-2"
-        >
-          <PlusIcon className="h-5 w-5" />
-          New Workout
-        </Link>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              fetchWorkouts();
+              fetchStats();
+            }}
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center gap-2"
+          >
+            🔄 Refresh
+          </button>
+          <Link
+            to="/workouts/new"
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center gap-2"
+          >
+            <PlusIcon className="h-5 w-5" />
+            New Workout
+          </Link>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -236,11 +269,11 @@ const Workouts = () => {
                       </div>
                       <div className="flex items-center gap-1">
                         <ClockIcon className="h-4 w-4" />
-                        {formatDuration(workout.duration?.value || 0)}
+                        {formatDuration(workout.totalDuration?.value || workout.duration?.value || workout.durationInMinutes || 0)}
                       </div>
                       <div className="flex items-center gap-1">
                         <FireIcon className="h-4 w-4" />
-                        {workout.caloriesBurned || 0} cal
+                        {workout.totalCaloriesBurned || workout.caloriesBurned || 0} cal
                       </div>
                       <div>
                         {workout.exercises?.length || 0} exercises
