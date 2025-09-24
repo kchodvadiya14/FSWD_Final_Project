@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { workoutService, exerciseService } from '../services/fitnessService';
+import fitnessDataManager from '../services/fitnessDataManager';
 import toast from 'react-hot-toast';
 import {
   PlusIcon,
@@ -10,7 +10,6 @@ import {
   TrashIcon,
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
-import HealthCheck from '../components/HealthCheck';
 
 // Predefined exercise library as fallback
 const PREDEFINED_EXERCISES = [
@@ -203,48 +202,51 @@ const NewWorkout = () => {
     try {
       setLoading(true);
       
-      // Format data to match backend validation requirements
+      // Calculate total calories burned from all exercises
+      const totalCaloriesBurned = workoutData.exercises.reduce((total, exercise) => {
+        // Simple calorie calculation based on exercise type and duration
+        const baseCaloriesPerMinute = {
+          'cardio': 8,
+          'strength': 6,
+          'flexibility': 3,
+          'sports': 7,
+          'other': 5
+        };
+        
+        const exerciseDuration = exercise.sets?.reduce((total, set) => {
+          return total + (set.duration || 2); // Default 2 minutes per set if no duration
+        }, 0) || 15; // Default 15 minutes if no sets
+        
+        return total + (baseCaloriesPerMinute[exercise.category] || 5) * exerciseDuration;
+      }, 0);
+
+      // Format workout data for local storage
       const formattedWorkoutData = {
-        ...workoutData,
-        totalDuration: workoutData.duration, // Backend expects 'totalDuration' not 'duration'
+        title: workoutData.title.trim(),
+        date: workoutData.date,
+        workoutType: workoutData.workoutType,
+        duration: workoutData.duration,
+        notes: workoutData.notes || '',
         exercises: workoutData.exercises.map(exercise => ({
           ...exercise,
-          // Ensure category is valid
           category: ['cardio', 'strength', 'flexibility', 'sports', 'other'].includes(exercise.category) 
             ? exercise.category 
             : 'other'
-        }))
+        })),
+        caloriesBurned: Math.round(totalCaloriesBurned)
       };
       
-      console.log('🚀 Sending workout data:', formattedWorkoutData); // Debug log
-      console.log('📡 API URL:', import.meta.env.VITE_API_URL || 'http://localhost:5001/api');
+      console.log('🚀 Creating workout with local data manager:', formattedWorkoutData);
       
-      const result = await workoutService.createWorkout(formattedWorkoutData);
+      // Save workout using local data manager
+      const result = fitnessDataManager.addWorkout(formattedWorkoutData);
       console.log('✅ Workout created successfully:', result);
       
       toast.success('Workout created successfully!');
       navigate('/workouts');
     } catch (error) {
       console.error('❌ Failed to create workout:', error);
-      console.error('Error details:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        message: error.message
-      });
-      
-      // More specific error handling
-      if (error.response?.status === 429) {
-        toast.error('Too many requests. Please wait a moment and try again.');
-      } else if (error.response?.status === 401) {
-        toast.error('Please log in to create workouts.');
-      } else if (error.response?.status >= 500) {
-        toast.error('Server error. Please check if the backend is running.');
-      } else if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
-        toast.error('Network error. Please check if backend server is running on port 5001.');
-      } else {
-        toast.error(error.response?.data?.message || error.message || 'Failed to create workout');
-      }
+      toast.error('Failed to create workout. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -276,9 +278,6 @@ const NewWorkout = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Health Check - Remove this after testing */}
-      <HealthCheck />
-      
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Create New Workout</h1>

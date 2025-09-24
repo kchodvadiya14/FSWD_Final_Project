@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import userService from '../services/userService';
+import fitnessDataManager from '../services/fitnessDataManager';
 import {
   ChartBarIcon,
   HeartIcon,
@@ -9,7 +9,9 @@ import {
   FireIcon,
   ClockIcon,
   TrophyIcon,
-  PlusIcon
+  PlusIcon,
+  BeakerIcon,
+  BoltIcon
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -26,8 +28,15 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
-      const data = await userService.getDashboard();
+      // Use local fitness data manager
+      const data = fitnessDataManager.getDashboardData();
       setDashboardData(data);
+      
+      // Check for new achievements
+      const newAchievements = fitnessDataManager.checkAndUnlockAchievements();
+      newAchievements.forEach(achievement => {
+        toast.success(`🎉 Achievement Unlocked: ${achievement.title}!`);
+      });
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
       toast.error('Failed to load dashboard data');
@@ -38,63 +47,61 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="flex flex-col items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+        <p className="text-gray-600">Loading your fitness dashboard...</p>
       </div>
     );
   }
 
-  // Mock data for demonstration if API fails
-  const mockData = {
-    totalWorkouts: 15,
-    totalCaloriesBurned: 2450,
-    averageWorkoutDuration: 45,
-    currentStreak: 5,
-    weeklyWorkouts: 4,
-    monthlyGoal: 16,
-    todaysCalories: 1850,
-    calorieGoal: 2200,
-    waterIntake: 6,
-    waterGoal: 8,
-    weight: user?.weight || 70,
-    weightGoal: (user?.weight || 70) - 5,
-    recentWorkouts: [
-      { id: 1, name: 'Push Day', date: '2024-01-15', duration: 60, calories: 320 },
-      { id: 2, name: 'Cardio', date: '2024-01-14', duration: 30, calories: 180 },
-      { id: 3, name: 'Pull Day', date: '2024-01-13', duration: 55, calories: 290 }
-    ]
-  };
+  if (!dashboardData) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64">
+        <p className="text-gray-600 mb-4">Unable to load dashboard data</p>
+        <button 
+          onClick={fetchDashboardData}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
-  const data = dashboardData || mockData;
+  const { workoutStats, todaysNutrition, todaysMetrics, goals, streaks, recentWorkouts, summary } = dashboardData;
 
   const statsCards = [
     {
-      title: 'Total Workouts',
-      value: data.totalWorkouts || 0,
+      title: 'This Week',
+      value: `${workoutStats.totalWorkouts} workouts`,
       icon: ChartBarIcon,
       color: 'bg-blue-500',
-      change: '+2 this week'
+      change: `${workoutStats.totalDuration}min total`,
+      trend: 'up'
     },
     {
       title: 'Calories Burned',
-      value: `${data.totalCaloriesBurned || 0}`,
+      value: `${workoutStats.totalCalories}`,
       icon: FireIcon,
       color: 'bg-red-500',
-      change: '+150 today'
+      change: `Avg: ${workoutStats.avgCalories}/workout`,
+      trend: 'up'
     },
     {
-      title: 'Avg Duration',
-      value: `${data.averageWorkoutDuration || 0}m`,
-      icon: ClockIcon,
+      title: 'Current Weight',
+      value: `${summary.currentWeight}kg`,
+      icon: ScaleIcon,
       color: 'bg-green-500',
-      change: '+5m from last week'
+      change: `Goal: ${summary.targetWeight}kg`,
+      trend: summary.currentWeight > summary.targetWeight ? 'down' : 'up'
     },
     {
-      title: 'Current Streak',
-      value: `${data.currentStreak || 0} days`,
+      title: 'Workout Streak',
+      value: `${streaks.workout.current} days`,
       icon: TrophyIcon,
       color: 'bg-yellow-500',
-      change: 'Keep it up!'
+      change: `Best: ${streaks.workout.longest} days`,
+      trend: 'up'
     }
   ];
 
@@ -186,45 +193,45 @@ const Dashboard = () => {
 
       {/* Progress Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Weekly Progress */}
+        {/* Today's Nutrition */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Weekly Progress</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Today's Nutrition</h2>
           <div className="space-y-4">
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Workouts</span>
-                <span className="text-gray-900">{data.weeklyWorkouts}/{data.monthlyGoal} monthly goal</span>
+                <span className="text-gray-600">Calories</span>
+                <span className="text-gray-900">{todaysNutrition.totalCalories}/{summary.dailyCalorieTarget}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
-                  className="bg-blue-600 h-2 rounded-full" 
-                  style={{ width: `${(data.weeklyWorkouts / data.monthlyGoal) * 100}%` }}
+                  className="bg-green-600 h-2 rounded-full" 
+                  style={{ width: `${Math.min((todaysNutrition.totalCalories / summary.dailyCalorieTarget) * 100, 100)}%` }}
                 ></div>
               </div>
             </div>
             
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Calories</span>
-                <span className="text-gray-900">{data.todaysCalories}/{data.calorieGoal}</span>
+                <span className="text-gray-600">Protein</span>
+                <span className="text-gray-900">{todaysNutrition.totalProtein}g</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
-                  className="bg-green-600 h-2 rounded-full" 
-                  style={{ width: `${(data.todaysCalories / data.calorieGoal) * 100}%` }}
+                  className="bg-blue-600 h-2 rounded-full" 
+                  style={{ width: `${Math.min((todaysNutrition.totalProtein / 150) * 100, 100)}%` }}
                 ></div>
               </div>
             </div>
 
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Water Intake</span>
-                <span className="text-gray-900">{data.waterIntake}/{data.waterGoal} glasses</span>
+                <span className="text-gray-600">Water</span>
+                <span className="text-gray-900">{todaysNutrition.waterIntake}/{summary.dailyWaterTarget} glasses</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-blue-400 h-2 rounded-full" 
-                  style={{ width: `${(data.waterIntake / data.waterGoal) * 100}%` }}
+                  style={{ width: `${(todaysNutrition.waterIntake / summary.dailyWaterTarget) * 100}%` }}
                 ></div>
               </div>
             </div>
@@ -243,20 +250,20 @@ const Dashboard = () => {
             </Link>
           </div>
           <div className="space-y-3">
-            {data.recentWorkouts?.slice(0, 3).map((workout, index) => (
+            {recentWorkouts && recentWorkouts.length > 0 ? recentWorkouts.slice(0, 3).map((workout, index) => (
               <div key={workout.id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">{workout.name}</h3>
+                  <h3 className="text-sm font-medium text-gray-900">{workout.title}</h3>
                   <p className="text-sm text-gray-500">
                     {new Date(workout.date).toLocaleDateString()} • {workout.duration}min
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">{workout.calories} cal</p>
-                  <p className="text-sm text-gray-500">burned</p>
+                  <p className="text-sm font-medium text-gray-900">{workout.caloriesBurned} cal</p>
+                  <p className="text-sm text-gray-500 capitalize">{workout.type}</p>
                 </div>
               </div>
-            )) || (
+            )) : (
               <div className="text-center py-6">
                 <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900">No workouts yet</h3>
@@ -278,32 +285,85 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Today's Goals */}
+      {/* Goals Progress */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Today's Goals</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Active Goals</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-              <ChartBarIcon className="h-8 w-8 text-blue-600" />
+          {goals && goals.length > 0 ? goals.slice(0, 3).map((goal) => (
+            <div key={goal.id} className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-900">{goal.title}</h3>
+                <span className="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">
+                  {goal.progress}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                <div 
+                  className="bg-indigo-600 h-2 rounded-full" 
+                  style={{ width: `${goal.progress}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-gray-500">
+                Target: {goal.target} • Current: {goal.current}
+              </p>
             </div>
-            <h3 className="text-sm font-medium text-gray-900">Complete Workout</h3>
-            <p className="text-sm text-gray-500">45 minutes remaining</p>
+          )) : (
+            <div className="col-span-3 text-center py-6">
+              <TrophyIcon className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No active goals</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Set some fitness goals to track your progress.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {goals && goals.length > 3 && (
+          <div className="mt-4 text-center">
+            <Link
+              to="/progress"
+              className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
+            >
+              View all goals →
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* Today's Health Metrics */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Today's Health</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-2">
+              <HeartIcon className="h-6 w-6 text-blue-600" />
+            </div>
+            <p className="text-sm font-medium text-gray-900">Steps</p>
+            <p className="text-lg font-semibold text-blue-600">{todaysMetrics.steps?.toLocaleString() || 0}</p>
           </div>
           
-          <div className="text-center">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-3">
-              <HeartIcon className="h-8 w-8 text-green-600" />
+          <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2">
+              <ScaleIcon className="h-6 w-6 text-green-600" />
             </div>
-            <h3 className="text-sm font-medium text-gray-900">Hit Calorie Goal</h3>
-            <p className="text-sm text-gray-500">{data.calorieGoal - data.todaysCalories} calories to go</p>
+            <p className="text-sm font-medium text-gray-900">Weight</p>
+            <p className="text-lg font-semibold text-green-600">{todaysMetrics.weight || summary.currentWeight}kg</p>
           </div>
-          
-          <div className="text-center">
-            <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-              <ScaleIcon className="h-8 w-8 text-blue-600" />
+
+          <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <div className="mx-auto w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-2">
+              <BoltIcon className="h-6 w-6 text-purple-600" />
             </div>
-            <h3 className="text-sm font-medium text-gray-900">Stay Hydrated</h3>
-            <p className="text-sm text-gray-500">{data.waterGoal - data.waterIntake} glasses left</p>
+            <p className="text-sm font-medium text-gray-900">Energy</p>
+            <p className="text-lg font-semibold text-purple-600">{todaysMetrics.energy || 7}/10</p>
+          </div>
+
+          <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <div className="mx-auto w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mb-2">
+              <BeakerIcon className="h-6 w-6 text-yellow-600" />
+            </div>
+            <p className="text-sm font-medium text-gray-900">Sleep</p>
+            <p className="text-lg font-semibold text-yellow-600">{todaysMetrics.sleep?.hours || 8}h</p>
           </div>
         </div>
       </div>

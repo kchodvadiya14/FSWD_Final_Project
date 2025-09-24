@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { workoutService } from '../services/fitnessService';
+import fitnessDataManager from '../services/fitnessDataManager';
 import toast from 'react-hot-toast';
 import {
   PlusIcon,
@@ -8,7 +8,9 @@ import {
   ClockIcon,
   CalendarIcon,
   ChartBarIcon,
-  FunnelIcon
+  FunnelIcon,
+  TrashIcon,
+  PencilIcon
 } from '@heroicons/react/24/outline';
 
 const Workouts = () => {
@@ -24,23 +26,43 @@ const Workouts = () => {
   const fetchWorkouts = async () => {
     try {
       setLoading(true);
-      console.log('🔍 Fetching workouts with filters:', filters);
-      const response = await workoutService.getWorkouts(filters);
-      console.log('📦 Raw workout response:', response);
       
-      // Backend returns: { success: true, data: { workouts: [...], pagination: {...} } }
-      const workoutsData = response.data?.workouts || response.workouts || [];
-      console.log('✅ Extracted workouts:', workoutsData);
+      // Get workouts from local data manager
+      let workoutsData = fitnessDataManager.getWorkouts();
+      
+      // Apply filters
+      if (filters.workoutType !== 'all') {
+        workoutsData = workoutsData.filter(w => w.type === filters.workoutType);
+      }
+      
+      // Apply sorting
+      workoutsData.sort((a, b) => {
+        let aVal, bVal;
+        switch (filters.sortBy) {
+          case 'date':
+            aVal = new Date(a.date);
+            bVal = new Date(b.date);
+            break;
+          case 'duration':
+            aVal = a.duration;
+            bVal = b.duration;
+            break;
+          case 'calories':
+            aVal = a.caloriesBurned || 0;
+            bVal = b.caloriesBurned || 0;
+            break;
+          default:
+            aVal = new Date(a.date);
+            bVal = new Date(b.date);
+        }
+        
+        return filters.sortOrder === 'desc' ? bVal - aVal || bVal.getTime() - aVal.getTime() : aVal - bVal || aVal.getTime() - bVal.getTime();
+      });
       
       setWorkouts(workoutsData);
     } catch (error) {
-      console.error('❌ Failed to fetch workouts:', error);
-      console.error('Error details:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
-      toast.error(error.response?.data?.message || 'Failed to load workouts');
+      console.error('Failed to fetch workouts:', error);
+      toast.error('Failed to load workouts');
     } finally {
       setLoading(false);
     }
@@ -48,17 +70,11 @@ const Workouts = () => {
 
   const fetchStats = async () => {
     try {
-      console.log('📊 Fetching workout stats...');
-      const response = await workoutService.getWorkoutStats();
-      console.log('📈 Raw stats response:', response);
-      
-      // Extract stats data properly
-      const statsData = response.data || response;
-      console.log('✅ Extracted stats:', statsData);
-      
+      // Get stats from local data manager
+      const statsData = fitnessDataManager.getWorkoutStats(30); // Last 30 days
       setStats(statsData);
     } catch (error) {
-      console.error('❌ Failed to fetch workout stats:', error);
+      console.error('Failed to fetch workout stats:', error);
     }
   };
 
@@ -73,9 +89,10 @@ const Workouts = () => {
     }
 
     try {
-      await workoutService.deleteWorkout(id);
+      fitnessDataManager.deleteWorkout(id);
       toast.success('Workout deleted successfully');
       fetchWorkouts();
+      fetchStats(); // Refresh stats after deletion
       fetchStats();
     } catch (error) {
       console.error('Failed to delete workout:', error);

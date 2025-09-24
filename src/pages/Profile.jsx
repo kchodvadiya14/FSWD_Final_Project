@@ -1,5 +1,6 @@
-﻿import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import fitnessDataManager from '../services/fitnessDataManager';
 import {
   CameraIcon,
   CalendarIcon,
@@ -14,30 +15,44 @@ import {
 
 const Profile = () => {
   const fileInputRef = useRef(null);
-  const [profile, setProfile] = useState({
-    name: 'Krishna Chodvadiya',
-    email: 'krishna@example.com',
-    age: '22',
-    gender: 'Male',
-    height: '175',
-    weight: '73.5',
-    targetWeight: '70',
-    activityLevel: 'moderately_active',
-    fitnessGoals: ['weight_loss', 'muscle_gain', 'endurance'],
-    bio: 'Passionate about fitness and healthy living. Love trying new workouts and staying active!',
-    joinDate: new Date().toISOString(),
-    profilePicture: null,
-    preferences: {
-      units: 'metric',
-      notifications: true,
-      workoutReminders: true,
-      weeklyReports: true
-    }
-  });
-  
+  const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [previewImage, setPreviewImage] = useState(null);
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = () => {
+    try {
+      const userData = fitnessDataManager.getUser();
+      // Flatten the nested profile structure for the component
+      const flattenedProfile = {
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        joinDate: userData.joinDate,
+        age: userData.profile?.age,
+        gender: userData.profile?.gender,
+        height: userData.profile?.height,
+        weight: userData.profile?.weight,
+        targetWeight: userData.profile?.targetWeight,
+        activityLevel: userData.profile?.activityLevel,
+        fitnessGoals: userData.profile?.fitnessGoals || [],
+        dailyCalorieTarget: userData.profile?.dailyCalorieTarget,
+        dailyWaterTarget: userData.profile?.dailyWaterTarget,
+        preferences: userData.preferences || {}
+      };
+      setProfile(flattenedProfile);
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      setProfile({}); // Set empty object to avoid infinite loading
+    } finally {
+      setInitialLoading(false);
+    }
+  };
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -63,9 +78,35 @@ const Profile = () => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Profile updated successfully!');
-      setIsEditing(false);
+      
+      // Convert flattened profile back to nested structure for saving
+      const nestedUserData = {
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        joinDate: profile.joinDate,
+        profile: {
+          age: profile.age,
+          gender: profile.gender,
+          height: profile.height,
+          weight: profile.weight,
+          targetWeight: profile.targetWeight,
+          activityLevel: profile.activityLevel,
+          fitnessGoals: profile.fitnessGoals,
+          dailyCalorieTarget: profile.dailyCalorieTarget,
+          dailyWaterTarget: profile.dailyWaterTarget
+        },
+        preferences: profile.preferences
+      };
+      
+      const success = fitnessDataManager.updateUser(nestedUserData);
+      if (success) {
+        toast.success('Profile updated successfully!');
+        setIsEditing(false);
+        setPreviewImage(null);
+      } else {
+        toast.error('Failed to update profile');
+      }
     } catch (error) {
       console.error('Failed to update profile:', error);
       toast.error('Failed to update profile');
@@ -78,6 +119,30 @@ const Profile = () => {
     setIsEditing(false);
     setPreviewImage(null);
   };
+
+  if (initialLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-gray-500 mb-4">Unable to load profile data</p>
+          <button 
+            onClick={loadProfile}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6">

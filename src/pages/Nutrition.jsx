@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { nutritionService } from '../services/userService';
+import fitnessDataManager from '../services/fitnessDataManager';
 import toast from 'react-hot-toast';
 import {
   PlusIcon,
@@ -30,11 +30,25 @@ const Nutrition = () => {
   const fetchNutritionEntries = async () => {
     try {
       setLoading(true);
-      const data = await nutritionService.getNutritionEntries({
-        ...filters,
-        date: selectedDate
+      const entries = fitnessDataManager.getNutritionEntries(selectedDate);
+      
+      // Apply filters
+      let filteredEntries = entries;
+      if (filters.mealType !== 'all') {
+        filteredEntries = entries.filter(entry => entry.mealType === filters.mealType);
+      }
+      
+      // Apply sorting
+      filteredEntries.sort((a, b) => {
+        if (filters.sortBy === 'createdAt') {
+          const dateA = new Date(a.createdAt || a.date);
+          const dateB = new Date(b.createdAt || b.date);
+          return filters.sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+        }
+        return 0;
       });
-      setNutritionEntries(data.data || []);
+      
+      setNutritionEntries(filteredEntries);
     } catch (error) {
       console.error('Failed to fetch nutrition entries:', error);
       toast.error('Failed to load nutrition data');
@@ -45,8 +59,8 @@ const Nutrition = () => {
 
   const fetchNutritionStats = async () => {
     try {
-      const data = await nutritionService.getNutritionStats(selectedDate);
-      setStats(data.data);
+      const stats = fitnessDataManager.getNutritionStats(selectedDate);
+      setStats(stats);
     } catch (error) {
       console.error('Failed to fetch nutrition stats:', error);
     }
@@ -58,10 +72,14 @@ const Nutrition = () => {
     }
 
     try {
-      await nutritionService.deleteNutritionEntry(id);
-      toast.success('Nutrition entry deleted successfully');
-      fetchNutritionEntries();
-      fetchNutritionStats();
+      const success = fitnessDataManager.deleteNutritionEntry(id);
+      if (success) {
+        toast.success('Nutrition entry deleted successfully');
+        fetchNutritionEntries();
+        fetchNutritionStats();
+      } else {
+        toast.error('Failed to delete nutrition entry');
+      }
     } catch (error) {
       console.error('Failed to delete nutrition entry:', error);
       toast.error('Failed to delete nutrition entry');

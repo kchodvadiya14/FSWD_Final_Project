@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import fitnessDataManager from '../services/fitnessDataManager';
 import {
   HeartIcon,
   ChartBarIcon,
@@ -9,6 +10,33 @@ import {
 } from '@heroicons/react/24/outline';
 
 const HealthMetrics = () => {
+  const [healthMetrics, setHealthMetrics] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchHealthMetrics();
+  }, []);
+
+  const fetchHealthMetrics = () => {
+    try {
+      setLoading(true);
+      const metrics = fitnessDataManager.getCurrentHealthMetrics();
+      setHealthMetrics(metrics);
+    } catch (error) {
+      console.error('Failed to fetch health metrics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -28,18 +56,33 @@ const HealthMetrics = () => {
             </div>
             <div className="ml-4">
               <h3 className="text-lg font-semibold text-gray-900">Steps</h3>
-              <p className="text-sm text-gray-500">Daily Goal: 10,000</p>
+              <p className="text-sm text-gray-500">Daily Goal: {healthMetrics?.stepsGoal || 10000}</p>
             </div>
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-3xl font-bold text-blue-600">8,247</span>
-              <span className="text-sm text-green-600 font-medium">82%</span>
+              <span className="text-3xl font-bold text-blue-600">
+                {(healthMetrics?.steps || 0).toLocaleString()}
+              </span>
+              <span className={`text-sm font-medium ${
+                ((healthMetrics?.steps || 0) / (healthMetrics?.stepsGoal || 10000)) >= 1 
+                  ? 'text-green-600' 
+                  : 'text-orange-600'
+              }`}>
+                {Math.round(((healthMetrics?.steps || 0) / (healthMetrics?.stepsGoal || 10000)) * 100)}%
+              </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
-              <div className="bg-blue-500 h-3 rounded-full" style={{ width: '82%' }}></div>
+              <div 
+                className="bg-blue-500 h-3 rounded-full" 
+                style={{ 
+                  width: `${Math.min(100, ((healthMetrics?.steps || 0) / (healthMetrics?.stepsGoal || 10000)) * 100)}%` 
+                }}
+              ></div>
             </div>
-            <p className="text-sm text-gray-600">1,753 steps to goal</p>
+            <p className="text-sm text-gray-600">
+              {Math.max(0, (healthMetrics?.stepsGoal || 10000) - (healthMetrics?.steps || 0)).toLocaleString()} steps to goal
+            </p>
           </div>
         </div>
 
@@ -51,18 +94,33 @@ const HealthMetrics = () => {
             </div>
             <div className="ml-4">
               <h3 className="text-lg font-semibold text-gray-900">Calories Burned</h3>
-              <p className="text-sm text-gray-500">Daily Goal: 500</p>
+              <p className="text-sm text-gray-500">Daily Goal: {healthMetrics?.caloriesBurnedGoal || 500}</p>
             </div>
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-3xl font-bold text-red-600">425</span>
-              <span className="text-sm text-yellow-600 font-medium">85%</span>
+              <span className="text-3xl font-bold text-red-600">
+                {(healthMetrics?.caloriesBurned || 0).toLocaleString()}
+              </span>
+              <span className={`text-sm font-medium ${
+                ((healthMetrics?.caloriesBurned || 0) / (healthMetrics?.caloriesBurnedGoal || 500)) >= 1 
+                  ? 'text-green-600' 
+                  : 'text-yellow-600'
+              }`}>
+                {Math.round(((healthMetrics?.caloriesBurned || 0) / (healthMetrics?.caloriesBurnedGoal || 500)) * 100)}%
+              </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
-              <div className="bg-red-500 h-3 rounded-full" style={{ width: '85%' }}></div>
+              <div 
+                className="bg-red-500 h-3 rounded-full" 
+                style={{ 
+                  width: `${Math.min(100, ((healthMetrics?.caloriesBurned || 0) / (healthMetrics?.caloriesBurnedGoal || 500)) * 100)}%` 
+                }}
+              ></div>
             </div>
-            <p className="text-sm text-gray-600">75 calories to goal</p>
+            <p className="text-sm text-gray-600">
+              {Math.max(0, (healthMetrics?.caloriesBurnedGoal || 500) - (healthMetrics?.caloriesBurned || 0))} calories to goal
+            </p>
           </div>
         </div>
 
@@ -74,18 +132,33 @@ const HealthMetrics = () => {
             </div>
             <div className="ml-4">
               <h3 className="text-lg font-semibold text-gray-900">Active Minutes</h3>
-              <p className="text-sm text-gray-500">Daily Goal: 60</p>
+              <p className="text-sm text-gray-500">Daily Goal: {healthMetrics?.activeMinutesGoal || 60}</p>
             </div>
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-3xl font-bold text-green-600">45</span>
-              <span className="text-sm text-yellow-600 font-medium">75%</span>
+              <span className="text-3xl font-bold text-green-600">
+                {healthMetrics?.activeMinutes || 0}
+              </span>
+              <span className={`text-sm font-medium ${
+                ((healthMetrics?.activeMinutes || 0) / (healthMetrics?.activeMinutesGoal || 60)) >= 1 
+                  ? 'text-green-600' 
+                  : 'text-yellow-600'
+              }`}>
+                {Math.round(((healthMetrics?.activeMinutes || 0) / (healthMetrics?.activeMinutesGoal || 60)) * 100)}%
+              </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
-              <div className="bg-green-500 h-3 rounded-full" style={{ width: '75%' }}></div>
+              <div 
+                className="bg-green-500 h-3 rounded-full" 
+                style={{ 
+                  width: `${Math.min(100, ((healthMetrics?.activeMinutes || 0) / (healthMetrics?.activeMinutesGoal || 60)) * 100)}%` 
+                }}
+              ></div>
             </div>
-            <p className="text-sm text-gray-600">15 minutes to goal</p>
+            <p className="text-sm text-gray-600">
+              {Math.max(0, (healthMetrics?.activeMinutesGoal || 60) - (healthMetrics?.activeMinutes || 0))} minutes to goal
+            </p>
           </div>
         </div>
 
@@ -101,15 +174,17 @@ const HealthMetrics = () => {
             </div>
           </div>
           <div className="space-y-3">
-            <div className="text-3xl font-bold text-red-600">72 bpm</div>
+            <div className="text-3xl font-bold text-red-600">
+              {healthMetrics?.heartRate?.resting || 72} bpm
+            </div>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-600">Resting:</span>
-                <span className="font-medium ml-1">65 bpm</span>
+                <span className="font-medium ml-1">{healthMetrics?.heartRate?.resting || 65} bpm</span>
               </div>
               <div>
                 <span className="text-gray-600">Max Today:</span>
-                <span className="font-medium ml-1">185 bpm</span>
+                <span className="font-medium ml-1">{healthMetrics?.heartRate?.max || 185} bpm</span>
               </div>
             </div>
           </div>

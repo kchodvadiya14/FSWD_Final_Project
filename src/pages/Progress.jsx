@@ -1,5 +1,6 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
+import fitnessDataManager from '../services/fitnessDataManager';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -33,106 +34,56 @@ ChartJS.register(
 const Progress = () => {
   const [timeRange, setTimeRange] = useState('weekly');
   const [selectedMetric, setSelectedMetric] = useState('weight');
+  const [progressData, setProgressData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock progress data
-  const progressData = {
-    weight: {
-      current: 73.5,
-      start: 75.2,
-      goal: 70.0,
-      change: -1.7,
-      data: [75.2, 74.8, 74.5, 74.3, 74.1, 73.9, 73.5]
-    },
-    steps: {
-      current: 8247,
-      goal: 10000,
-      average: 7823,
-      data: [7500, 8200, 9100, 8800, 7200, 9500, 8247],
-      streak: 12
-    },
-    workouts: {
-      thisWeek: 4,
-      lastWeek: 3,
-      streak: 8,
-      total: 42,
-      data: [3, 4, 2, 5, 4, 3, 4]
-    },
-    calories: {
-      burned: 2340,
-      goal: 2500,
-      data: [2100, 2340, 2580, 2200, 1980, 2650, 2340]
-    },
-    sleep: {
-      average: 7.4,
-      goal: 8.0,
-      quality: 85,
-      data: [7.2, 8.1, 6.8, 7.9, 6.5, 8.3, 7.4]
+  useEffect(() => {
+    fetchProgressData();
+  }, [timeRange]);
+
+  const fetchProgressData = () => {
+    try {
+      setLoading(true);
+      const data = fitnessDataManager.getComprehensiveProgressData(timeRange);
+      setProgressData(data);
+    } catch (error) {
+      console.error('Failed to fetch progress data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Achievements and milestones
-  const achievements = [
-    {
-      id: 1,
-      title: "Weight Loss Champion",
-      description: "Lost 5 pounds in 30 days",
-      icon: ScaleIcon,
-      color: "text-green-600",
-      bgColor: "bg-green-100",
-      date: "2 days ago",
-      completed: true
-    },
-    {
-      id: 2,
-      title: "Workout Warrior",
-      description: "7 day workout streak",
-      icon: BoltIcon,
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-100",
-      date: "1 week ago",
-      completed: true
-    },
-    {
-      id: 3,
-      title: "Step Master",
-      description: "10,000 steps daily for 14 days",
-      icon: ArrowTrendingUpIcon,
-      color: "text-blue-600",
-      bgColor: "bg-blue-100",
-      date: "3 days ago",
-      completed: true
-    },
-    {
-      id: 4,
-      title: "Sleep Champion",
-      description: "8+ hours sleep for 5 nights",
-      icon: StarIcon,
-      color: "text-purple-600",
-      bgColor: "bg-purple-100",
-      date: "In progress",
-      completed: false
-    }
-  ];
+  if (loading || !progressData) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
+  // Get achievements from data manager
+  const achievements = fitnessDataManager.getAchievements();
+
+  // Get streaks from progress data
   const streaks = [
     {
       type: "Workouts",
-      current: 8,
-      best: 15,
+      current: progressData?.workouts?.streak || 0,
+      best: progressData?.workouts?.bestStreak || 0,
       icon: BoltIcon,
       color: "text-orange-600"
     },
     {
       type: "Steps Goal",
-      current: 12,
-      best: 23,
+      current: progressData?.steps?.streak || 0,
+      best: progressData?.steps?.bestStreak || 0,
       icon: ArrowTrendingUpIcon,
       color: "text-blue-600"
     },
     {
       type: "Sleep Goal",
-      current: 3,
-      best: 9,
+      current: progressData?.sleep?.streak || 0,
+      best: progressData?.sleep?.bestStreak || 0,
       icon: StarIcon,
       color: "text-purple-600"
     }
@@ -353,26 +304,30 @@ const Progress = () => {
         <h2 className="text-xl font-semibold text-gray-900 mb-6">Recent Achievements</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {achievements.map((achievement) => {
-            const Icon = achievement.icon;
             return (
               <div key={achievement.id} className={`p-4 rounded-lg border-2 ${
-                achievement.completed 
+                achievement.earned 
                   ? 'border-green-200 bg-green-50' 
                   : 'border-gray-200 bg-gray-50'
               }`}>
                 <div className="flex items-start space-x-3">
-                  <div className={`p-2 rounded-lg ${achievement.bgColor}`}>
-                    <Icon className={`h-6 w-6 ${achievement.color}`} />
+                  <div className="p-2 rounded-lg bg-blue-100">
+                    <span className="text-2xl">{achievement.icon}</span>
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold text-gray-900">{achievement.title}</h3>
-                      {achievement.completed && (
+                      {achievement.earned && (
                         <TrophyIcon className="h-5 w-5 text-yellow-500" />
                       )}
                     </div>
                     <p className="text-sm text-gray-600 mt-1">{achievement.description}</p>
-                    <p className="text-xs text-gray-500 mt-2">{achievement.date}</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {achievement.earned 
+                        ? `Earned ${new Date(achievement.earnedDate).toLocaleDateString()}` 
+                        : 'Not earned yet'
+                      }
+                    </p>
                   </div>
                 </div>
               </div>
