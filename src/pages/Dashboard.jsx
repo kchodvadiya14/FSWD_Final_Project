@@ -26,7 +26,7 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
-      const data = await userService.getDashboardData();
+      const data = await userService.getDashboard();
       setDashboardData(data);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);

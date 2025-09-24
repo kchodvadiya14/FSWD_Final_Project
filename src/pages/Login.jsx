@@ -57,10 +57,12 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
+      console.log('🔄 Attempting login...');
       await login(formData);
+      console.log('✅ Login completed, navigating to:', from);
       navigate(from, { replace: true });
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('🚨 Login failed in component:', error);
       // Error is already handled in AuthContext
     } finally {
       setIsSubmitting(false);

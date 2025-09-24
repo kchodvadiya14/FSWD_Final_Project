@@ -132,20 +132,25 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = async (credentials) => {
     try {
+      console.log('🔄 Starting login process...', credentials.email);
       dispatch({ type: AUTH_ACTIONS.LOADING, payload: true });
       dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
       const data = await authService.login(credentials);
+      console.log('✅ Login service returned:', data);
       
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
         payload: data
       });
 
+      console.log('🎉 Login successful, dispatched success action');
       toast.success('Login successful!');
       return data;
     } catch (error) {
+      console.error('🚨 Login error:', error);
       const errorMessage = error.response?.data?.message || 'Login failed';
+      console.log('🚨 Error message:', errorMessage);
       dispatch({
         type: AUTH_ACTIONS.LOGIN_FAILURE,
         payload: errorMessage
@@ -179,8 +184,9 @@ export const AuthProvider = ({ children }) => {
       let errorMessage = 'Registration failed';
       
       if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
-        // Handle validation errors
-        errorMessage = error.response.data.errors.map(err => err.msg).join(', ');
+        // Handle validation errors - show all validation messages
+        const validationMessages = error.response.data.errors.map(err => err.msg);
+        errorMessage = validationMessages.join('. ');
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }

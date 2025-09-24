@@ -11,6 +11,8 @@ import userRoutes from './routes/users.js';
 import workoutRoutes from './routes/workouts.js';
 import nutritionRoutes from './routes/nutrition.js';
 import metricsRoutes from './routes/metrics.js';
+import exerciseRoutes from './routes/exercises.js';
+import goalRoutes from './routes/goals.js';
 
 // Load environment variables
 dotenv.config();
@@ -21,10 +23,10 @@ const PORT = process.env.PORT || 5000;
 // Security middleware
 app.use(helmet());
 
-// Rate limiting
+// Rate limiting - More lenient for development
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 1000, // limit each IP to 1000 requests per windowMs (increased for development)
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use(limiter);
@@ -45,6 +47,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/workouts', workoutRoutes);
 app.use('/api/nutrition', nutritionRoutes);
 app.use('/api/metrics', metricsRoutes);
+app.use('/api/exercises', exerciseRoutes);
+app.use('/api/goals', goalRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

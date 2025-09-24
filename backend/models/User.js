@@ -143,8 +143,7 @@ const userSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Indexes for better performance
-userSchema.index({ email: 1 });
+// Indexes for better performance (email index already created by unique: true)
 userSchema.index({ createdAt: -1 });
 
 // Virtual for BMI calculation
@@ -182,11 +181,15 @@ userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
 
   try {
+    console.log('🔒 Hashing password for user:', this.email);
+    console.log('  - Original password:', this.password);
     // Hash password with cost of 12
     const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
     this.password = await bcrypt.hash(this.password, saltRounds);
+    console.log('  - Hashed password:', this.password?.substring(0, 20) + '...');
     next();
   } catch (error) {
+    console.error('❌ Password hashing error:', error);
     next(error);
   }
 });
@@ -228,8 +231,14 @@ userSchema.pre('save', function(next) {
 // Instance method to check password
 userSchema.methods.comparePassword = async function(candidatePassword) {
   try {
-    return await bcrypt.compare(candidatePassword, this.password);
+    console.log('🔑 Comparing passwords:');
+    console.log('  - Candidate (plain):', candidatePassword);
+    console.log('  - Stored (hash):', this.password?.substring(0, 20) + '...');
+    const result = await bcrypt.compare(candidatePassword, this.password);
+    console.log('  - Comparison result:', result);
+    return result;
   } catch (error) {
+    console.error('❌ Password comparison error:', error);
     throw new Error('Password comparison failed');
   }
 };

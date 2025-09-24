@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import { generateToken } from '../middleware/auth.js';
 import { validationResult } from 'express-validator';
@@ -5,9 +6,22 @@ import { validationResult } from 'express-validator';
 // Register new user
 export const register = async (req, res) => {
   try {
+    console.log('🔍 Registration request body:', JSON.stringify(req.body, null, 2));
+    
+    // Check if MongoDB is connected
+    if (!mongoose.connection.readyState) {
+      console.log('❌ Database not connected');
+      return res.status(503).json({
+        success: false,
+        message: 'Database service unavailable. Please try again later.',
+        error: 'MongoDB not connected'
+      });
+    }
+    
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ Validation errors:', errors.array());
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
@@ -40,9 +54,8 @@ export const register = async (req, res) => {
     // Generate token
     const token = generateToken(user._id);
 
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
+    // Update last login without triggering password hash middleware
+    await User.findByIdAndUpdate(user._id, { lastLogin: new Date() });
 
     res.status(201).json({
       success: true,
@@ -74,6 +87,16 @@ export const register = async (req, res) => {
 // Login user
 export const login = async (req, res) => {
   try {
+    // Check if MongoDB is connected
+    if (!mongoose.connection.readyState) {
+      console.log('❌ Database not connected');
+      return res.status(503).json({
+        success: false,
+        message: 'Database service unavailable. Please try again later.',
+        error: 'MongoDB not connected'
+      });
+    }
+    
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -85,16 +108,19 @@ export const login = async (req, res) => {
     }
 
     const { email, password } = req.body;
+    console.log('🔍 Login attempt for email:', email);
 
     // Find user by email and include password for comparison
     const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
     
     if (!user) {
+      console.log('❌ User not found for email:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
       });
     }
+    console.log('✅ User found:', user.email);
 
     // Check if account is active
     if (!user.isActive) {
@@ -105,8 +131,11 @@ export const login = async (req, res) => {
     }
 
     // Verify password
+    console.log('🔑 Verifying password...');
     const isPasswordValid = await user.comparePassword(password);
+    console.log('🔑 Password valid:', isPasswordValid);
     if (!isPasswordValid) {
+      console.log('❌ Password verification failed');
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
@@ -116,9 +145,8 @@ export const login = async (req, res) => {
     // Generate token
     const token = generateToken(user._id);
 
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
+    // Update last login without triggering password hash middleware
+    await User.findByIdAndUpdate(user._id, { lastLogin: new Date() });
 
     res.status(200).json({
       success: true,

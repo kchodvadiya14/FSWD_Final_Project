@@ -9,6 +9,10 @@ import Layout from './components/Layout/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Workouts from './pages/Workouts';
+import NewWorkout from './pages/NewWorkout';
+import Nutrition from './pages/Nutrition';
+import NewMeal from './pages/NewMeal';
 
 // Placeholder components for routes that aren't implemented yet
 const PlaceholderPage = ({ title }) => (
@@ -20,7 +24,12 @@ const PlaceholderPage = ({ title }) => (
 
 function App() {
   return (
-    <Router>
+    <Router
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}
+    >
       <AuthProvider>
         <div className="App">
           <Toaster
@@ -81,8 +90,8 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<PlaceholderPage title="Workouts" />} />
-              <Route path="new" element={<PlaceholderPage title="New Workout" />} />
+              <Route index element={<Workouts />} />
+              <Route path="new" element={<NewWorkout />} />
             </Route>
 
             <Route 
@@ -93,8 +102,8 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<PlaceholderPage title="Nutrition" />} />
-              <Route path="new" element={<PlaceholderPage title="Log Meal" />} />
+              <Route index element={<Nutrition />} />
+              <Route path="new" element={<NewMeal />} />
             </Route>
 
             <Route 

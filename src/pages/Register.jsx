@@ -265,8 +265,8 @@ const Register = () => {
                     )}
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  Password must contain at least one uppercase letter, one lowercase letter, and one number
+                <p className="mt-1 text-xs text-red-500 font-medium">
+                  ⚠️ Password must contain: uppercase letter, lowercase letter, and number
                 </p>
               </div>
 

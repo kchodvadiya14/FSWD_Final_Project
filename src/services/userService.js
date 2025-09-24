@@ -54,4 +54,68 @@ class UserService {
   }
 }
 
+class NutritionService {
+  // Get nutrition entries
+  async getNutritionEntries(params = {}) {
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const response = await api.get(`/nutrition${queryString ? `?${queryString}` : ''}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+
+  // Get single nutrition entry
+  async getNutritionEntry(id) {
+    try {
+      const response = await api.get(`/nutrition/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+
+  // Create nutrition entry
+  async createNutritionEntry(nutritionData) {
+    try {
+      const response = await api.post('/nutrition', nutritionData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+
+  // Update nutrition entry
+  async updateNutritionEntry(id, nutritionData) {
+    try {
+      const response = await api.put(`/nutrition/${id}`, nutritionData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+
+  // Delete nutrition entry
+  async deleteNutritionEntry(id) {
+    try {
+      const response = await api.delete(`/nutrition/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+
+  // Get nutrition statistics
+  async getNutritionStats(date) {
+    try {
+      const response = await api.get(`/nutrition/stats${date ? `?date=${date}` : ''}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+}
+
+export const nutritionService = new NutritionService();
 export default new UserService();
