@@ -14,6 +14,10 @@ import NewWorkout from './pages/NewWorkout';
 import WorkoutDetail from './pages/WorkoutDetail';
 import Nutrition from './pages/Nutrition';
 import NewMeal from './pages/NewMeal';
+import HealthMetrics from './pages/HealthMetrics';
+import Progress from './pages/Progress';
+import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 
 // Placeholder components for routes that aren't implemented yet
 const PlaceholderPage = ({ title }) => (
@@ -116,7 +120,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<PlaceholderPage title="Health Metrics" />} />
+              <Route index element={<HealthMetrics />} />
               <Route path="weight" element={<PlaceholderPage title="Weight Tracking" />} />
             </Route>
 
@@ -128,7 +132,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<PlaceholderPage title="Progress" />} />
+              <Route index element={<Progress />} />
             </Route>
 
             <Route 
@@ -139,7 +143,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<PlaceholderPage title="Profile" />} />
+              <Route index element={<Profile />} />
             </Route>
 
             <Route 
@@ -150,7 +154,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<PlaceholderPage title="Settings" />} />
+              <Route index element={<Settings />} />
             </Route>
 
             {/* Catch all route */}
