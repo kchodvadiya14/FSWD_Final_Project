@@ -14,7 +14,7 @@ const Register = () => {
     gender: '',
     height: '',
     weight: '',
-    activityLevel: 'moderate',
+    activityLevel: 'moderately_active',
     goals: [],
     acceptTerms: false
   });
