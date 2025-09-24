@@ -10,15 +10,74 @@ import {
   TrashIcon,
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
+import HealthCheck from '../components/HealthCheck';
+
+// Predefined exercise library as fallback
+const PREDEFINED_EXERCISES = [
+  // Chest Exercises
+  { _id: '1', name: 'Push-ups', category: 'chest', equipment: 'bodyweight', difficulty: 'beginner', primaryMuscles: ['chest', 'triceps'], secondaryMuscles: ['shoulders', 'core'], caloriesPerMinute: 8 },
+  { _id: '2', name: 'Bench Press', category: 'chest', equipment: 'barbell', difficulty: 'intermediate', primaryMuscles: ['chest', 'triceps'], secondaryMuscles: ['shoulders'], caloriesPerMinute: 10 },
+  { _id: '3', name: 'Incline Dumbbell Press', category: 'chest', equipment: 'dumbbells', difficulty: 'intermediate', primaryMuscles: ['upper chest', 'triceps'], secondaryMuscles: ['shoulders'], caloriesPerMinute: 9 },
+  { _id: '4', name: 'Chest Dips', category: 'chest', equipment: 'bodyweight', difficulty: 'intermediate', primaryMuscles: ['chest', 'triceps'], secondaryMuscles: ['shoulders'], caloriesPerMinute: 7 },
+  { _id: '5', name: 'Chest Flyes', category: 'chest', equipment: 'dumbbells', difficulty: 'beginner', primaryMuscles: ['chest'], secondaryMuscles: ['shoulders'], caloriesPerMinute: 6 },
+
+  // Back Exercises
+  { _id: '6', name: 'Pull-ups', category: 'back', equipment: 'bodyweight', difficulty: 'intermediate', primaryMuscles: ['lats', 'biceps'], secondaryMuscles: ['rhomboids', 'rear delts'], caloriesPerMinute: 10 },
+  { _id: '7', name: 'Deadlift', category: 'back', equipment: 'barbell', difficulty: 'intermediate', primaryMuscles: ['hamstrings', 'glutes', 'lower back'], secondaryMuscles: ['traps', 'lats'], caloriesPerMinute: 12 },
+  { _id: '8', name: 'Bent Over Rows', category: 'back', equipment: 'barbell', difficulty: 'intermediate', primaryMuscles: ['lats', 'rhomboids'], secondaryMuscles: ['biceps', 'rear delts'], caloriesPerMinute: 9 },
+  { _id: '9', name: 'Lat Pulldown', category: 'back', equipment: 'machine', difficulty: 'beginner', primaryMuscles: ['lats', 'biceps'], secondaryMuscles: ['rhomboids'], caloriesPerMinute: 8 },
+  { _id: '10', name: 'T-Bar Row', category: 'back', equipment: 'barbell', difficulty: 'intermediate', primaryMuscles: ['lats', 'rhomboids'], secondaryMuscles: ['biceps'], caloriesPerMinute: 9 },
+
+  // Legs Exercises
+  { _id: '11', name: 'Squats', category: 'legs', equipment: 'bodyweight', difficulty: 'beginner', primaryMuscles: ['quadriceps', 'glutes'], secondaryMuscles: ['hamstrings', 'calves'], caloriesPerMinute: 8 },
+  { _id: '12', name: 'Barbell Back Squat', category: 'legs', equipment: 'barbell', difficulty: 'intermediate', primaryMuscles: ['quadriceps', 'glutes'], secondaryMuscles: ['hamstrings', 'core'], caloriesPerMinute: 11 },
+  { _id: '13', name: 'Lunges', category: 'legs', equipment: 'bodyweight', difficulty: 'beginner', primaryMuscles: ['quadriceps', 'glutes'], secondaryMuscles: ['hamstrings', 'calves'], caloriesPerMinute: 7 },
+  { _id: '14', name: 'Leg Press', category: 'legs', equipment: 'machine', difficulty: 'beginner', primaryMuscles: ['quadriceps', 'glutes'], secondaryMuscles: ['hamstrings'], caloriesPerMinute: 9 },
+  { _id: '15', name: 'Calf Raises', category: 'legs', equipment: 'bodyweight', difficulty: 'beginner', primaryMuscles: ['calves'], secondaryMuscles: [], caloriesPerMinute: 5 },
+
+  // Shoulder Exercises
+  { _id: '16', name: 'Shoulder Press', category: 'shoulders', equipment: 'dumbbells', difficulty: 'beginner', primaryMuscles: ['shoulders'], secondaryMuscles: ['triceps', 'core'], caloriesPerMinute: 8 },
+  { _id: '17', name: 'Lateral Raises', category: 'shoulders', equipment: 'dumbbells', difficulty: 'beginner', primaryMuscles: ['side delts'], secondaryMuscles: [], caloriesPerMinute: 6 },
+  { _id: '18', name: 'Front Raises', category: 'shoulders', equipment: 'dumbbells', difficulty: 'beginner', primaryMuscles: ['front delts'], secondaryMuscles: [], caloriesPerMinute: 6 },
+  { _id: '19', name: 'Reverse Flyes', category: 'shoulders', equipment: 'dumbbells', difficulty: 'beginner', primaryMuscles: ['rear delts'], secondaryMuscles: ['rhomboids'], caloriesPerMinute: 6 },
+  { _id: '20', name: 'Pike Push-ups', category: 'shoulders', equipment: 'bodyweight', difficulty: 'intermediate', primaryMuscles: ['shoulders'], secondaryMuscles: ['triceps', 'core'], caloriesPerMinute: 7 },
+
+  // Arms Exercises
+  { _id: '21', name: 'Bicep Curls', category: 'arms', equipment: 'dumbbells', difficulty: 'beginner', primaryMuscles: ['biceps'], secondaryMuscles: ['forearms'], caloriesPerMinute: 5 },
+  { _id: '22', name: 'Tricep Dips', category: 'arms', equipment: 'bodyweight', difficulty: 'beginner', primaryMuscles: ['triceps'], secondaryMuscles: ['shoulders'], caloriesPerMinute: 6 },
+  { _id: '23', name: 'Hammer Curls', category: 'arms', equipment: 'dumbbells', difficulty: 'beginner', primaryMuscles: ['biceps', 'forearms'], secondaryMuscles: [], caloriesPerMinute: 5 },
+  { _id: '24', name: 'Tricep Extensions', category: 'arms', equipment: 'dumbbells', difficulty: 'beginner', primaryMuscles: ['triceps'], secondaryMuscles: [], caloriesPerMinute: 5 },
+  { _id: '25', name: 'Close-Grip Push-ups', category: 'arms', equipment: 'bodyweight', difficulty: 'intermediate', primaryMuscles: ['triceps'], secondaryMuscles: ['chest', 'shoulders'], caloriesPerMinute: 7 },
+
+  // Core Exercises
+  { _id: '26', name: 'Plank', category: 'core', equipment: 'bodyweight', difficulty: 'beginner', primaryMuscles: ['core'], secondaryMuscles: ['shoulders', 'glutes'], caloriesPerMinute: 4 },
+  { _id: '27', name: 'Crunches', category: 'core', equipment: 'bodyweight', difficulty: 'beginner', primaryMuscles: ['abs'], secondaryMuscles: [], caloriesPerMinute: 5 },
+  { _id: '28', name: 'Russian Twists', category: 'core', equipment: 'bodyweight', difficulty: 'beginner', primaryMuscles: ['obliques'], secondaryMuscles: ['abs'], caloriesPerMinute: 6 },
+  { _id: '29', name: 'Mountain Climbers', category: 'core', equipment: 'bodyweight', difficulty: 'intermediate', primaryMuscles: ['core'], secondaryMuscles: ['shoulders', 'legs'], caloriesPerMinute: 10 },
+  { _id: '30', name: 'Dead Bug', category: 'core', equipment: 'bodyweight', difficulty: 'beginner', primaryMuscles: ['core'], secondaryMuscles: [], caloriesPerMinute: 4 },
+
+  // Cardio Exercises
+  { _id: '31', name: 'Jumping Jacks', category: 'cardio', equipment: 'bodyweight', difficulty: 'beginner', primaryMuscles: ['full body'], secondaryMuscles: [], caloriesPerMinute: 12 },
+  { _id: '32', name: 'Burpees', category: 'cardio', equipment: 'bodyweight', difficulty: 'intermediate', primaryMuscles: ['full body'], secondaryMuscles: [], caloriesPerMinute: 15 },
+  { _id: '33', name: 'High Knees', category: 'cardio', equipment: 'bodyweight', difficulty: 'beginner', primaryMuscles: ['legs', 'core'], secondaryMuscles: [], caloriesPerMinute: 10 },
+  { _id: '34', name: 'Running', category: 'cardio', equipment: 'bodyweight', difficulty: 'beginner', primaryMuscles: ['legs'], secondaryMuscles: ['core'], caloriesPerMinute: 12 },
+  { _id: '35', name: 'Jump Rope', category: 'cardio', equipment: 'other', difficulty: 'beginner', primaryMuscles: ['legs', 'shoulders'], secondaryMuscles: ['core'], caloriesPerMinute: 13 },
+
+  // Full Body Exercises
+  { _id: '36', name: 'Thrusters', category: 'full-body', equipment: 'dumbbells', difficulty: 'intermediate', primaryMuscles: ['legs', 'shoulders'], secondaryMuscles: ['core', 'triceps'], caloriesPerMinute: 12 },
+  { _id: '37', name: 'Turkish Get-ups', category: 'full-body', equipment: 'dumbbells', difficulty: 'advanced', primaryMuscles: ['core', 'shoulders'], secondaryMuscles: ['legs', 'glutes'], caloriesPerMinute: 10 },
+  { _id: '38', name: 'Bear Crawl', category: 'full-body', equipment: 'bodyweight', difficulty: 'intermediate', primaryMuscles: ['core', 'shoulders'], secondaryMuscles: ['legs'], caloriesPerMinute: 8 },
+  { _id: '39', name: 'Clean and Press', category: 'full-body', equipment: 'dumbbells', difficulty: 'advanced', primaryMuscles: ['full body'], secondaryMuscles: [], caloriesPerMinute: 14 },
+  { _id: '40', name: 'Man Makers', category: 'full-body', equipment: 'dumbbells', difficulty: 'advanced', primaryMuscles: ['full body'], secondaryMuscles: [], caloriesPerMinute: 15 }
+];
 
 const NewWorkout = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [exercises, setExercises] = useState([]);
   const [exerciseLibrary, setExerciseLibrary] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showExerciseModal, setShowExerciseModal] = useState(false);
-  const [categories, setCategories] = useState({ categories: [], equipment: [] });
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   const [workoutData, setWorkoutData] = useState({
     title: '',
@@ -27,43 +86,28 @@ const NewWorkout = () => {
     date: new Date().toISOString().split('T')[0],
     exercises: []
   });
-
-  useEffect(() => {
-    fetchExerciseLibrary();
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    calculateTotals();
-  }, [workoutData.exercises]);
-
-  const fetchExerciseLibrary = async () => {
+  const fetchExerciseLibrary = React.useCallback(async () => {
     try {
       const data = await exerciseService.getExercises({ limit: 100 });
-      setExerciseLibrary(data.data || []);
+      setExerciseLibrary(data.data || PREDEFINED_EXERCISES);
     } catch (error) {
       console.error('Failed to fetch exercises:', error);
+      // Use predefined exercises as fallback
+      setExerciseLibrary(PREDEFINED_EXERCISES);
       // Try to seed exercises if none exist
       try {
         await exerciseService.seedExercises();
         const data = await exerciseService.getExercises({ limit: 100 });
-        setExerciseLibrary(data.data || []);
+        if (data.data && data.data.length > 0) {
+          setExerciseLibrary(data.data);
+        }
       } catch (seedError) {
         console.error('Failed to seed exercises:', seedError);
       }
     }
-  };
+  }, []);
 
-  const fetchCategories = async () => {
-    try {
-      const data = await exerciseService.getCategories();
-      setCategories(data.data || { categories: [], equipment: [] });
-    } catch (error) {
-      console.error('Failed to fetch categories:', error);
-    }
-  };
-
-  const calculateTotals = () => {
+  const calculateTotals = React.useCallback(() => {
     const totalDuration = workoutData.exercises.reduce((sum, ex) => sum + (ex.duration?.value || 0), 0);
     const totalCalories = workoutData.exercises.reduce((sum, ex) => sum + (ex.caloriesBurned || 0), 0);
     
@@ -72,7 +116,15 @@ const NewWorkout = () => {
       duration: { value: totalDuration, unit: 'minutes' },
       caloriesBurned: totalCalories
     }));
-  };
+  }, [workoutData.exercises]);
+
+  useEffect(() => {
+    fetchExerciseLibrary();
+  }, [fetchExerciseLibrary]);
+
+  useEffect(() => {
+    calculateTotals();
+  }, [calculateTotals]);
 
   const addExerciseToWorkout = (exercise) => {
     // Map exercise categories to workout categories
@@ -164,28 +216,69 @@ const NewWorkout = () => {
         }))
       };
       
-      console.log('Sending workout data:', formattedWorkoutData); // Debug log
-      await workoutService.createWorkout(formattedWorkoutData);
+      console.log('🚀 Sending workout data:', formattedWorkoutData); // Debug log
+      console.log('📡 API URL:', import.meta.env.VITE_API_URL || 'http://localhost:5001/api');
+      
+      const result = await workoutService.createWorkout(formattedWorkoutData);
+      console.log('✅ Workout created successfully:', result);
+      
       toast.success('Workout created successfully!');
       navigate('/workouts');
     } catch (error) {
-      console.error('Failed to create workout:', error);
-      toast.error(error.response?.data?.message || error.message || 'Failed to create workout');
+      console.error('❌ Failed to create workout:', error);
+      console.error('Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      
+      // More specific error handling
+      if (error.response?.status === 429) {
+        toast.error('Too many requests. Please wait a moment and try again.');
+      } else if (error.response?.status === 401) {
+        toast.error('Please log in to create workouts.');
+      } else if (error.response?.status >= 500) {
+        toast.error('Server error. Please check if the backend is running.');
+      } else if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
+        toast.error('Network error. Please check if backend server is running on port 5001.');
+      } else {
+        toast.error(error.response?.data?.message || error.message || 'Failed to create workout');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredExercises = exerciseLibrary.filter(exercise =>
-    exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    exercise.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    exercise.primaryMuscles.some(muscle => 
-      muscle.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  const filteredExercises = exerciseLibrary.filter(exercise => {
+    const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      exercise.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      exercise.primaryMuscles.some(muscle => 
+        muscle.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    
+    const matchesCategory = selectedCategory === 'all' || exercise.category === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
+
+  const exerciseCategories = [
+    { value: 'all', label: 'All Categories' },
+    { value: 'chest', label: 'Chest' },
+    { value: 'back', label: 'Back' },
+    { value: 'legs', label: 'Legs' },
+    { value: 'shoulders', label: 'Shoulders' },
+    { value: 'arms', label: 'Arms' },
+    { value: 'core', label: 'Core' },
+    { value: 'cardio', label: 'Cardio' },
+    { value: 'full-body', label: 'Full Body' }
+  ];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* Health Check - Remove this after testing */}
+      <HealthCheck />
+      
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Create New Workout</h1>
@@ -410,15 +503,30 @@ const NewWorkout = () => {
                   <XMarkIcon className="h-6 w-6" />
                 </button>
               </div>
-              <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search exercises..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                />
+              <div className="space-y-3">
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search exercises..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    {exerciseCategories.map(category => (
+                      <option key={category.value} value={category.value}>
+                        {category.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
             <div className="p-6 overflow-y-auto max-h-96">

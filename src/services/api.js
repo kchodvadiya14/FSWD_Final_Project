@@ -4,10 +4,11 @@ import toast from 'react-hot-toast';
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
-  timeout: 10000,
+  timeout: 30000, // Increased timeout to 30 seconds
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: false, // Set to false to avoid CORS issues in development
 });
 
 // Request interceptor to add auth token
@@ -50,11 +51,12 @@ api.interceptors.response.use(
           toast.error('Resource not found');
           break;
           
-        case 422:
+        case 422: {
           // Validation errors
           const message = response.data?.message || 'Validation error';
           toast.error(message);
           break;
+        }
           
         case 429:
           toast.error('Too many requests. Please try again later.');
@@ -64,9 +66,10 @@ api.interceptors.response.use(
           toast.error('Server error. Please try again later.');
           break;
           
-        default:
+        default: {
           const errorMessage = response.data?.message || 'An error occurred';
           toast.error(errorMessage);
+        }
       }
     } else if (error.request) {
       // Network error
