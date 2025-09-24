@@ -11,6 +11,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Workouts from './pages/Workouts';
 import NewWorkout from './pages/NewWorkout';
+import WorkoutDetail from './pages/WorkoutDetail';
 import Nutrition from './pages/Nutrition';
 import NewMeal from './pages/NewMeal';
 
@@ -92,6 +93,7 @@ function App() {
             >
               <Route index element={<Workouts />} />
               <Route path="new" element={<NewWorkout />} />
+              <Route path=":id" element={<WorkoutDetail />} />
             </Route>
 
             <Route 
