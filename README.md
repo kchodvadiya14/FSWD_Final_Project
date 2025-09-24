@@ -12,6 +12,12 @@
 
 *NutriFit* is a comprehensive full-stack web application designed to help users track their fitness journey, monitor nutrition intake, and achieve their health goals. Built with modern technologies, it provides an intuitive interface for managing workouts, meals, health metrics, and progress tracking.
 
+<details>
+<summary>▶ Click to expand</summary>
+
+![Dashboard](Nutrifit.jpg)
+</details>
+
 ## Key Features
 
 ### *Authentication & User Management*
@@ -78,14 +84,6 @@
 ### Access the Application
 - *Frontend*: http://localhost:5173
 - *Backend API*: http://localhost:5001
-
-## Application Screenshots
-
-### Dashboard Overview
-![Dashboard](https://via.placeholder.com/800x450/4F46E5/FFFFFF?text=NutriFit+Dashboard)
-Real-time overview of your fitness journey with quick stats and recent activities
-
-## API Endpoints
 
 ### Authentication
 - POST /api/auth/register - User registration
