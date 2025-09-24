@@ -158,23 +158,47 @@ const NewMeal = () => {
 
     try {
       setLoading(true);
-      const totalNutrition = calculateTotalNutrition();
       
+      // Convert foodItems to the backend's meals structure
+      const foodItemsForMeal = mealData.foodItems.map(item => {
+        // Remove local ID and set category
+        const { id: _id, ...foodItem } = item;
+        return {
+          ...foodItem,
+          category: mealData.mealType // Set category to match mealType
+        };
+      });
+
+      // Create meals object with the appropriate meal type
+      const meals = {
+        breakfast: [],
+        lunch: [],
+        dinner: [],
+        snacks: []
+      };
+      
+      // Add food items to the correct meal category
+      const validMealTypes = ['breakfast', 'lunch', 'dinner'];
+      if (validMealTypes.includes(mealData.mealType)) {
+        meals[mealData.mealType] = foodItemsForMeal;
+      } else {
+        // Default to snacks if mealType is 'snack' or any other value
+        meals.snacks = foodItemsForMeal;
+      }
+
       const submissionData = {
-        ...mealData,
-        totalNutrition,
-        // Remove local IDs before submission
-        foodItems: mealData.foodItems.map(item => {
-          const { id, ...foodItem } = item;
-          return foodItem;
-        })
+        date: mealData.date,
+        meals: meals,
+        notes: mealData.notes
       };
 
+      console.log('🚀 Submitting nutrition data:', submissionData);
+      
       await nutritionService.createNutritionEntry(submissionData);
       toast.success('Meal logged successfully!');
       navigate('/nutrition');
     } catch (error) {
-      console.error('Failed to create nutrition entry:', error);
+      console.error('❌ Failed to create nutrition entry:', error);
       toast.error(error.message || 'Failed to log meal');
     } finally {
       setLoading(false);
