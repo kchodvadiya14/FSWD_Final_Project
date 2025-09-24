@@ -16,6 +16,7 @@ import NewMeal from './pages/NewMeal';
 import HealthMetrics from './pages/HealthMetrics';
 import Progress from './pages/Progress';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 
 // Placeholder components for routes that aren't implemented yet
 const PlaceholderPage = ({ title }) => (
@@ -151,7 +152,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<PlaceholderPage title="Settings" />} />
+              <Route index element={<Settings />} />
             </Route>
 
             {/* Catch all route */}
