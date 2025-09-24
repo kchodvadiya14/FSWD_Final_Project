@@ -15,6 +15,7 @@ import Nutrition from './pages/Nutrition';
 import NewMeal from './pages/NewMeal';
 import HealthMetrics from './pages/HealthMetrics';
 import Progress from './pages/Progress';
+import Profile from './pages/Profile';
 
 // Placeholder components for routes that aren't implemented yet
 const PlaceholderPage = ({ title }) => (
@@ -139,7 +140,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<PlaceholderPage title="Profile" />} />
+              <Route index element={<Profile />} />
             </Route>
 
             <Route 

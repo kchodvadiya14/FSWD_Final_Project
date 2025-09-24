@@ -1,34 +1,41 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import {
+  UserIcon,
   CameraIcon,
   CalendarIcon,
   ScaleIcon,
+  RulerIcon,
+  HeartIcon,
   PencilIcon,
   CheckIcon,
   XMarkIcon,
   TrophyIcon,
   FireIcon,
+  ClockIcon,
   ChartBarIcon
 } from '@heroicons/react/24/outline';
 
 const Profile = () => {
+  const { user } = useAuth();
   const fileInputRef = useRef(null);
   const [profile, setProfile] = useState({
-    name: 'Krishna Chodvadiya',
-    email: 'krishna@example.com',
-    age: '22',
-    gender: 'Male',
-    height: '175',
-    weight: '73.5',
-    targetWeight: '70',
-    activityLevel: 'moderately_active',
-    fitnessGoals: ['weight_loss', 'muscle_gain', 'endurance'],
-    bio: 'Passionate about fitness and healthy living. Love trying new workouts and staying active!',
-    joinDate: new Date().toISOString(),
+    name: '',
+    email: '',
+    age: '',
+    gender: '',
+    height: '',
+    weight: '',
+    targetWeight: '',
+    activityLevel: '',
+    fitnessGoals: [],
+    bio: '',
+    joinDate: '',
     profilePicture: null,
     preferences: {
       units: 'metric',
+      theme: 'light',
       notifications: true,
       workoutReminders: true,
       weeklyReports: true
@@ -39,10 +46,30 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
 
+  useEffect(() => {
+    // Initialize with user data and mock data for demo
+    if (user) {
+      setProfile(prev => ({
+        ...prev,
+        name: user.name || 'Krishna Chodvadiya',
+        email: user.email || 'krishna@example.com',
+        age: '22',
+        gender: 'Male',
+        height: '175',
+        weight: '73.5',
+        targetWeight: '70',
+        activityLevel: 'moderately_active',
+        fitnessGoals: ['weight_loss', 'muscle_gain', 'endurance'],
+        bio: 'Passionate about fitness and healthy living. Love trying new workouts and staying active!',
+        joinDate: user.createdAt || new Date().toISOString()
+      }));
+    }
+  }, [user]);
+
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
         toast.error('File size should be less than 5MB');
         return;
       }
@@ -63,7 +90,9 @@ const Profile = () => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // In a real app, call API to update profile
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      
       toast.success('Profile updated successfully!');
       setIsEditing(false);
     } catch (error) {
@@ -75,12 +104,66 @@ const Profile = () => {
   };
 
   const handleCancel = () => {
+    // Reset changes
     setIsEditing(false);
     setPreviewImage(null);
   };
 
+  const calculateBMI = () => {
+    if (!profile.height || !profile.weight) return null;
+    const heightInM = parseFloat(profile.height) / 100;
+    const weightInKg = parseFloat(profile.weight);
+    return (weightInKg / (heightInM * heightInM)).toFixed(1);
+  };
+
+  const getBMICategory = (bmi) => {
+    if (!bmi) return '';
+    const bmiValue = parseFloat(bmi);
+    if (bmiValue < 18.5) return 'Underweight';
+    if (bmiValue < 25) return 'Normal';
+    if (bmiValue < 30) return 'Overweight';
+    return 'Obese';
+  };
+
+  const calculateWeightProgress = () => {
+    if (!profile.weight || !profile.targetWeight) return 0;
+    const current = parseFloat(profile.weight);
+    const target = parseFloat(profile.targetWeight);
+    const initialWeight = 75.2; // Mock initial weight
+    const progress = ((initialWeight - current) / (initialWeight - target)) * 100;
+    return Math.min(Math.max(progress, 0), 100).toFixed(0);
+  };
+
+  const getActivityLevelLabel = (level) => {
+    const levels = {
+      sedentary: 'Sedentary (Office job)',
+      lightly_active: 'Lightly Active (Light exercise)',
+      moderately_active: 'Moderately Active (Moderate exercise)',
+      very_active: 'Very Active (Heavy exercise)',
+      extremely_active: 'Extremely Active (Very heavy exercise)'
+    };
+    return levels[level] || level;
+  };
+
+  const getFitnessGoalLabel = (goal) => {
+    const goals = {
+      weight_loss: 'Weight Loss',
+      muscle_gain: 'Muscle Gain',
+      endurance: 'Build Endurance',
+      strength: 'Build Strength',
+      flexibility: 'Improve Flexibility',
+      general_fitness: 'General Fitness'
+    };
+    return goals[goal] || goal;
+  };
+
+  const bmi = calculateBMI();
+  const bmiCategory = getBMICategory(bmi);
+  const weightProgress = calculateWeightProgress();
+
   return (
     <div className="space-y-6 p-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
@@ -120,8 +203,10 @@ const Profile = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Profile Summary Card */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow p-6">
+            {/* Profile Picture */}
             <div className="flex flex-col items-center">
               <div className="relative">
                 <div className="w-32 h-32 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
@@ -150,6 +235,7 @@ const Profile = () => {
                 />
               </div>
               
+              {/* Name and Email */}
               <div className="text-center mt-4 w-full">
                 {isEditing ? (
                   <input
@@ -160,7 +246,7 @@ const Profile = () => {
                     placeholder="Your name"
                   />
                 ) : (
-                  <h2 className="text-xl font-semibold text-gray-900">{profile.name}</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">{profile.name || 'Your Name'}</h2>
                 )}
                 <p className="text-gray-600 mt-1">{profile.email}</p>
                 <div className="flex items-center justify-center mt-2 text-sm text-gray-500">
@@ -170,21 +256,24 @@ const Profile = () => {
               </div>
             </div>
 
+            {/* Quick Stats */}
             <div className="mt-6 pt-6 border-t border-gray-200">
               <h3 className="text-sm font-medium text-gray-900 mb-4">Health Overview</h3>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center">
-                    <div className="bg-blue-100 p-2 rounded-lg">
-                      <ScaleIcon className="h-5 w-5 text-blue-600" />
+                {bmi && (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center">
+                      <div className="bg-blue-100 p-2 rounded-lg">
+                        <ScaleIcon className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-gray-900">BMI</p>
+                        <p className="text-xs text-gray-600">{bmiCategory}</p>
+                      </div>
                     </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">Current Weight</p>
-                      <p className="text-xs text-gray-600">Tracking progress</p>
-                    </div>
+                    <span className="text-lg font-semibold text-gray-900">{bmi}</span>
                   </div>
-                  <span className="text-lg font-semibold text-gray-900">{profile.weight} kg</span>
-                </div>
+                )}
                 
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center">
@@ -193,7 +282,7 @@ const Profile = () => {
                     </div>
                     <div className="ml-3">
                       <p className="text-sm font-medium text-gray-900">Weight Goal</p>
-                      <p className="text-xs text-gray-600">Target weight</p>
+                      <p className="text-xs text-gray-600">{weightProgress}% Progress</p>
                     </div>
                   </div>
                   <span className="text-sm font-semibold text-gray-900">{profile.targetWeight} kg</span>
@@ -228,7 +317,9 @@ const Profile = () => {
           </div>
         </div>
 
+        {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Personal Information */}
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Personal Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -243,7 +334,7 @@ const Profile = () => {
                     placeholder="25"
                   />
                 ) : (
-                  <p className="text-gray-900 py-2">{profile.age} years</p>
+                  <p className="text-gray-900 py-2">{profile.age || 'Not set'} years</p>
                 )}
               </div>
 
@@ -262,7 +353,7 @@ const Profile = () => {
                     <option value="Prefer not to say">Prefer not to say</option>
                   </select>
                 ) : (
-                  <p className="text-gray-900 py-2">{profile.gender}</p>
+                  <p className="text-gray-900 py-2">{profile.gender || 'Not set'}</p>
                 )}
               </div>
 
@@ -277,7 +368,7 @@ const Profile = () => {
                     placeholder="175"
                   />
                 ) : (
-                  <p className="text-gray-900 py-2">{profile.height} cm</p>
+                  <p className="text-gray-900 py-2">{profile.height || 'Not set'} cm</p>
                 )}
               </div>
 
@@ -293,7 +384,7 @@ const Profile = () => {
                     placeholder="70.5"
                   />
                 ) : (
-                  <p className="text-gray-900 py-2">{profile.weight} kg</p>
+                  <p className="text-gray-900 py-2">{profile.weight || 'Not set'} kg</p>
                 )}
               </div>
 
@@ -309,7 +400,7 @@ const Profile = () => {
                     placeholder="68.0"
                   />
                 ) : (
-                  <p className="text-gray-900 py-2">{profile.targetWeight} kg</p>
+                  <p className="text-gray-900 py-2">{profile.targetWeight || 'Not set'} kg</p>
                 )}
               </div>
 
@@ -329,11 +420,12 @@ const Profile = () => {
                     <option value="extremely_active">Extremely Active (Very heavy exercise)</option>
                   </select>
                 ) : (
-                  <p className="text-gray-900 py-2">Moderately Active (Moderate exercise)</p>
+                  <p className="text-gray-900 py-2">{getActivityLevelLabel(profile.activityLevel) || 'Not set'}</p>
                 )}
               </div>
             </div>
 
+            {/* Bio Section */}
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
               {isEditing ? (
@@ -345,26 +437,59 @@ const Profile = () => {
                   placeholder="Tell us about yourself and your fitness journey..."
                 />
               ) : (
-                <p className="text-gray-900 py-2">{profile.bio}</p>
+                <p className="text-gray-900 py-2">{profile.bio || 'No bio added yet.'}</p>
               )}
             </div>
           </div>
 
+          {/* Fitness Goals */}
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Fitness Goals</h3>
-            <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
-                Weight Loss
-              </span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
-                Muscle Gain
-              </span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
-                Build Endurance
-              </span>
-            </div>
+            {isEditing ? (
+              <div className="space-y-3">
+                {['weight_loss', 'muscle_gain', 'endurance', 'strength', 'flexibility', 'general_fitness'].map((goal) => (
+                  <label key={goal} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={profile.fitnessGoals.includes(goal)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setProfile(prev => ({
+                            ...prev,
+                            fitnessGoals: [...prev.fitnessGoals, goal]
+                          }));
+                        } else {
+                          setProfile(prev => ({
+                            ...prev,
+                            fitnessGoals: prev.fitnessGoals.filter(g => g !== goal)
+                          }));
+                        }
+                      }}
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-3 text-sm text-gray-700">{getFitnessGoalLabel(goal)}</span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {profile.fitnessGoals.length > 0 ? (
+                  profile.fitnessGoals.map((goal) => (
+                    <span
+                      key={goal}
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800"
+                    >
+                      {getFitnessGoalLabel(goal)}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-gray-500">No fitness goals set yet.</p>
+                )}
+              </div>
+            )}
           </div>
 
+          {/* Preferences */}
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Preferences</h3>
             <div className="space-y-4">
@@ -373,7 +498,21 @@ const Profile = () => {
                   <label className="text-sm font-medium text-gray-700">Unit System</label>
                   <p className="text-xs text-gray-500">Choose your preferred measurement units</p>
                 </div>
-                <span className="text-gray-900 capitalize">{profile.preferences.units}</span>
+                {isEditing ? (
+                  <select
+                    value={profile.preferences.units}
+                    onChange={(e) => setProfile(prev => ({
+                      ...prev,
+                      preferences: { ...prev.preferences, units: e.target.value }
+                    }))}
+                    className="border border-gray-300 rounded-lg px-3 py-1 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="metric">Metric (kg, cm)</option>
+                    <option value="imperial">Imperial (lbs, ft)</option>
+                  </select>
+                ) : (
+                  <span className="text-gray-900 capitalize">{profile.preferences.units}</span>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
@@ -381,9 +520,21 @@ const Profile = () => {
                   <label className="text-sm font-medium text-gray-700">Email Notifications</label>
                   <p className="text-xs text-gray-500">Receive updates about your progress</p>
                 </div>
-                <span className="text-gray-900">
-                  {profile.preferences.notifications ? 'Enabled' : 'Disabled'}
-                </span>
+                {isEditing ? (
+                  <input
+                    type="checkbox"
+                    checked={profile.preferences.notifications}
+                    onChange={(e) => setProfile(prev => ({
+                      ...prev,
+                      preferences: { ...prev.preferences, notifications: e.target.checked }
+                    }))}
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                ) : (
+                  <span className="text-gray-900">
+                    {profile.preferences.notifications ? 'Enabled' : 'Disabled'}
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
@@ -391,9 +542,21 @@ const Profile = () => {
                   <label className="text-sm font-medium text-gray-700">Workout Reminders</label>
                   <p className="text-xs text-gray-500">Get notified about scheduled workouts</p>
                 </div>
-                <span className="text-gray-900">
-                  {profile.preferences.workoutReminders ? 'Enabled' : 'Disabled'}
-                </span>
+                {isEditing ? (
+                  <input
+                    type="checkbox"
+                    checked={profile.preferences.workoutReminders}
+                    onChange={(e) => setProfile(prev => ({
+                      ...prev,
+                      preferences: { ...prev.preferences, workoutReminders: e.target.checked }
+                    }))}
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                ) : (
+                  <span className="text-gray-900">
+                    {profile.preferences.workoutReminders ? 'Enabled' : 'Disabled'}
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
@@ -401,9 +564,21 @@ const Profile = () => {
                   <label className="text-sm font-medium text-gray-700">Weekly Reports</label>
                   <p className="text-xs text-gray-500">Receive weekly progress summaries</p>
                 </div>
-                <span className="text-gray-900">
-                  {profile.preferences.weeklyReports ? 'Enabled' : 'Disabled'}
-                </span>
+                {isEditing ? (
+                  <input
+                    type="checkbox"
+                    checked={profile.preferences.weeklyReports}
+                    onChange={(e) => setProfile(prev => ({
+                      ...prev,
+                      preferences: { ...prev.preferences, weeklyReports: e.target.checked }
+                    }))}
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                ) : (
+                  <span className="text-gray-900">
+                    {profile.preferences.weeklyReports ? 'Enabled' : 'Disabled'}
+                  </span>
+                )}
               </div>
             </div>
           </div>
