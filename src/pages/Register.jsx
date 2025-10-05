@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
@@ -10,55 +10,59 @@ const Register = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    age: '',
+    dateOfBirth: '',
     gender: '',
     height: '',
     weight: '',
+<<<<<<< Updated upstream
     activityLevel: 'moderate',
     goals: [],
+=======
+    fitnessGoal: '', // Single goal selection
+    activityLevel: 'moderately_active',
+>>>>>>> Stashed changes
     acceptTerms: false
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, isLoading, error, clearError } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { register } = useAuth();
   const navigate = useNavigate();
 
-  // Clear error when component mounts or unmounts
-  useEffect(() => {
-    clearError();
-    return () => clearError();
-  }, []); // Empty dependency array
+  // Prevent conflicting goals
+  const fitnessGoals = [
+    { value: 'lose_weight', label: 'Lose Weight', desc: 'Reduce body weight and body fat' },
+    { value: 'gain_weight', label: 'Gain Weight', desc: 'Increase muscle mass and overall weight' },
+    { value: 'maintain_weight', label: 'Maintain Weight', desc: 'Stay at current weight and improve fitness' },
+    { value: 'build_muscle', label: 'Build Muscle', desc: 'Focus on strength and muscle development' },
+    { value: 'improve_fitness', label: 'Improve Fitness', desc: 'Enhance overall cardiovascular fitness' }
+  ];
+
+  const activityLevels = [
+    { value: 'sedentary', label: 'Sedentary', desc: 'Office job, little to no exercise' },
+    { value: 'lightly_active', label: 'Lightly Active', desc: 'Light exercise 1-3 days/week' },
+    { value: 'moderately_active', label: 'Moderately Active', desc: 'Moderate exercise 3-5 days/week' },
+    { value: 'very_active', label: 'Very Active', desc: 'Heavy exercise 6-7 days/week' },
+    { value: 'super_active', label: 'Super Active', desc: 'Very heavy exercise, physical job' }
+  ];
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
-    if (type === 'checkbox') {
-      if (name === 'goals') {
-        setFormData(prev => ({
-          ...prev,
-          goals: checked 
-            ? [...prev.goals, value]
-            : prev.goals.filter(goal => goal !== value)
-        }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          [name]: checked
-        }));
-      }
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const calculateAge = (dateOfBirth) => {
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
     }
-    
-    // Clear error when user starts typing
-    if (error) {
-      clearError();
-    }
+    return age;
   };
 
   const validateForm = () => {
@@ -82,8 +86,14 @@ const Register = () => {
       return false;
     }
 
-    if (!formData.age || formData.age < 13 || formData.age > 120) {
-      toast.error('Please enter a valid age (13-120)');
+    if (!formData.dateOfBirth) {
+      toast.error('Date of birth is required');
+      return false;
+    }
+
+    const age = calculateAge(formData.dateOfBirth);
+    if (age < 13 || age > 120) {
+      toast.error('Age must be between 13 and 120 years');
       return false;
     }
 
@@ -92,13 +102,13 @@ const Register = () => {
       return false;
     }
 
-    if (!formData.height || formData.height < 50 || formData.height > 300) {
-      toast.error('Please enter a valid height (50-300 cm)');
+    if (!formData.fitnessGoal) {
+      toast.error('Please select your fitness goal');
       return false;
     }
 
-    if (!formData.weight || formData.weight < 20 || formData.weight > 500) {
-      toast.error('Please enter a valid weight (20-500 kg)');
+    if (!formData.activityLevel) {
+      toast.error('Please select your activity level');
       return false;
     }
 
@@ -112,92 +122,60 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (isSubmitting) return;
-
-    if (!validateForm()) return;
+    if (isSubmitting || !validateForm()) return;
 
     setIsSubmitting(true);
 
     try {
-      // Prepare data for registration
       const registrationData = {
         name: formData.name.trim(),
         email: formData.email.toLowerCase().trim(),
         password: formData.password,
         profile: {
-          age: parseInt(formData.age),
+          dateOfBirth: formData.dateOfBirth,
+          age: calculateAge(formData.dateOfBirth),
           gender: formData.gender,
-          height: {
-            value: parseFloat(formData.height),
-            unit: 'cm'
-          },
-          currentWeight: {
-            value: parseFloat(formData.weight),
-            unit: 'kg'
-          },
-          activityLevel: formData.activityLevel,
-          fitnessGoal: formData.goals[0] || 'maintain_weight' // Take first goal or default
+          height: formData.height ? { value: parseFloat(formData.height), unit: 'cm' } : null,
+          currentWeight: formData.weight ? { value: parseFloat(formData.weight), unit: 'kg' } : null,
+          fitnessGoal: formData.fitnessGoal,
+          activityLevel: formData.activityLevel
         }
       };
 
       await register(registrationData);
+<<<<<<< Updated upstream
       navigate('/login');
+=======
+      toast.success('Account created successfully!');
+      navigate('/dashboard');
+>>>>>>> Stashed changes
     } catch (error) {
       console.error('Registration failed:', error);
-      // Error is already handled in AuthContext
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const activityLevels = [
-    { value: 'sedentary', label: 'Sedentary (little or no exercise)' },
-    { value: 'lightly_active', label: 'Lightly Active (light exercise 1-3 days/week)' },
-    { value: 'moderately_active', label: 'Moderately Active (moderate exercise 3-5 days/week)' },
-    { value: 'very_active', label: 'Very Active (hard exercise 6-7 days/week)' },
-    { value: 'super_active', label: 'Super Active (very hard exercise, physical job)' }
-  ];
-
-  const goalOptions = [
-    { value: 'lose_weight', label: 'Weight Loss' },
-    { value: 'gain_weight', label: 'Weight Gain' },
-    { value: 'build_muscle', label: 'Build Muscle' },
-    { value: 'improve_fitness', label: 'Improve Fitness' },
-    { value: 'maintain_weight', label: 'Maintain Current Weight' }
-  ];
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl w-full space-y-8">
-        <div>
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-indigo-100">
-            <svg className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mb-4">
+            <span className="text-2xl font-bold text-white">F</span>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Join NutriFit
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link
-              to="/login"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
-              sign in to your existing account
+          <h2 className="text-3xl font-extrabold text-gray-900">Join FitLife Pro</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Start your fitness journey today •{' '}
+            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+              Already have an account?
             </Link>
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-              <p className="text-sm">{error}</p>
-            </div>
-          )}
-
+        <form className="mt-8 space-y-6 bg-white p-8 rounded-2xl shadow-xl" onSubmit={handleSubmit}>
+          {/* Basic Info */}
           <div className="space-y-4">
+<<<<<<< Updated upstream
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -408,84 +386,165 @@ const Register = () => {
             </div>
 
             {/* Fitness Goals */}
+=======
+>>>>>>> Stashed changes
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Fitness Goals (select all that apply)
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {goalOptions.map(goal => (
-                  <label key={goal.value} className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="goals"
-                      value={goal.value}
-                      checked={formData.goals.includes(goal.value)}
-                      onChange={handleChange}
-                      disabled={isSubmitting || isLoading}
-                      className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                    />
-                    <span className="text-sm text-gray-700">{goal.label}</span>
-                  </label>
-                ))}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <input
+                name="name"
+                type="text"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter your full name"
+                value={formData.name}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input
+                name="email"
+                type="email"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <div className="relative">
+                <input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Create a password"
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
               </div>
             </div>
 
-            {/* Terms and Conditions */}
-            <div className="flex items-center">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
               <input
-                id="acceptTerms"
-                name="acceptTerms"
-                type="checkbox"
+                name="confirmPassword"
+                type="password"
                 required
-                checked={formData.acceptTerms}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Confirm your password"
+                value={formData.confirmPassword}
                 onChange={handleChange}
-                disabled={isSubmitting || isLoading}
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
               />
-              <label htmlFor="acceptTerms" className="ml-2 block text-sm text-gray-900">
-                I accept the{' '}
-                <Link to="/terms" className="text-indigo-600 hover:text-indigo-500">
-                  Terms and Conditions
-                </Link>{' '}
-                and{' '}
-                <Link to="/privacy" className="text-indigo-600 hover:text-indigo-500">
-                  Privacy Policy
-                </Link>
-              </label>
             </div>
           </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isSubmitting || isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200"
-            >
-              {isSubmitting ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creating account...
-                </>
-              ) : (
-                'Create Account'
-              )}
-            </button>
+          {/* Personal Info */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+              <input
+                name="dateOfBirth"
+                type="date"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+              <select
+                name="gender"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={formData.gender}
+                onChange={handleChange}
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Primary Fitness Goal</label>
+              <select
+                name="fitnessGoal"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={formData.fitnessGoal}
+                onChange={handleChange}
+              >
+                <option value="">Select your main goal</option>
+                {fitnessGoals.map(goal => (
+                  <option key={goal.value} value={goal.value}>
+                    {goal.label} - {goal.desc}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Activity Level</label>
+              <select
+                name="activityLevel"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={formData.activityLevel}
+                onChange={handleChange}
+              >
+                <option value="">Select your activity level</option>
+                {activityLevels.map(level => (
+                  <option key={level.value} value={level.value}>
+                    {level.label} - {level.desc}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link
-                to="/login"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                Sign in here
-              </Link>
-            </p>
+          {/* Terms */}
+          <div className="flex items-center">
+            <input
+              name="acceptTerms"
+              type="checkbox"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              checked={formData.acceptTerms}
+              onChange={handleChange}
+            />
+            <label className="ml-2 block text-sm text-gray-900">
+              I agree to the{' '}
+              <a href="#" className="text-blue-600 hover:text-blue-500">Terms of Service</a>
+              {' '}and{' '}
+              <a href="#" className="text-blue-600 hover:text-blue-500">Privacy Policy</a>
+            </label>
           </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            {isSubmitting ? 'Creating Account...' : 'Create Account'}
+          </button>
         </form>
       </div>
     </div>

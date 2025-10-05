@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+<<<<<<< Updated upstream
 import userService from '../services/userService';
 import {
   ChartBarIcon,
@@ -10,15 +11,46 @@ import {
   ClockIcon,
   TrophyIcon,
   PlusIcon
+=======
+import { 
+  FireIcon, 
+  HeartIcon, 
+  ChartBarIcon, 
+  TrophyIcon,
+  PlusIcon,
+  ArrowTrendingUpIcon,
+  CalendarIcon
+>>>>>>> Stashed changes
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
-import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const [dashboardData, setDashboardData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState({
+    todaysStats: {
+      workoutsCompleted: 1,
+      caloriesBurned: 280,
+      caloriesConsumed: 1450,
+      waterIntake: 6,
+      sleepHours: 7.5
+    },
+    weeklyGoals: {
+      workouts: { current: 4, target: 5 },
+      calories: { current: 1200, target: 1500 },
+      weight: { current: 68.5, target: 67 }
+    },
+    recentActivities: [
+      { id: 1, type: 'workout', name: 'Morning Cardio', time: '2 hours ago', calories: 280 },
+      { id: 2, type: 'meal', name: 'Healthy Breakfast', time: '3 hours ago', calories: 350 },
+      { id: 3, type: 'water', name: 'Hydration Goal', time: '1 hour ago', glasses: 2 }
+    ],
+    upcomingWorkouts: [
+      { id: 1, name: 'Strength Training', time: '15:00', duration: '45 min' },
+      { id: 2, name: 'Yoga Session', time: '18:30', duration: '30 min' }
+    ]
+  });
 
+<<<<<<< Updated upstream
   useEffect(() => {
     fetchDashboardData();
   }, []);
@@ -98,95 +130,113 @@ const Dashboard = () => {
     }
   ];
 
+=======
+  const getProgressPercentage = (current, target) => {
+    return target > 0 ? Math.min((current / target) * 100, 100) : 0;
+  };
+
+>>>>>>> Stashed changes
   const quickActions = [
-    {
-      title: 'Log Workout',
-      description: 'Record your latest training session',
-      icon: ChartBarIcon,
-      href: '/workouts/new',
-      color: 'bg-blue-500'
-    },
-    {
-      title: 'Add Meal',
-      description: 'Track your nutrition intake',
-      icon: HeartIcon,
-      href: '/nutrition/new',
-      color: 'bg-green-500'
-    },
-    {
-      title: 'Update Weight',
-      description: 'Log your current body weight',
-      icon: ScaleIcon,
-      href: '/health/weight',
-      color: 'bg-purple-500'
-    }
+    { name: 'Start Workout', icon: FireIcon, href: '/workouts', color: 'bg-red-500' },
+    { name: 'Log Meal', icon: HeartIcon, href: '/nutrition', color: 'bg-green-500' },
+    { name: 'Add Health Data', icon: ChartBarIcon, href: '/health', color: 'bg-blue-500' },
+    { name: 'Chat with AI', icon: TrophyIcon, href: '/ai-coach', color: 'bg-purple-500' }
   ];
 
   return (
     <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-md p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">
-          Welcome back, {user?.name?.split(' ')[0] || 'there'}!
-        </h1>
-        <p className="text-indigo-100">
-          You're doing great! Here's your fitness summary for today.
-        </p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statsCards.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <div key={index} className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-center">
-                <div className={`${stat.color} rounded-lg p-3`}>
-                  <Icon className="h-6 w-6 text-white" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
-                </div>
-              </div>
-              <div className="mt-4">
-                <p className="text-sm text-gray-500">{stat.change}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {quickActions.map((action, index) => {
-            const Icon = action.icon;
-            return (
-              <Link
-                key={index}
-                to={action.href}
-                className="block p-4 border border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-md transition-all duration-200"
-              >
-                <div className="flex items-center">
-                  <div className={`${action.color} rounded-lg p-2`}>
-                    <Icon className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-gray-900">{action.title}</h3>
-                    <p className="text-sm text-gray-500">{action.description}</p>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
+      {/* Welcome Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">Welcome back, {user?.name?.split(' ')[0]}!</h1>
+            <p className="text-blue-100">
+              {dashboardData.todaysStats.workoutsCompleted > 0 
+                ? "Great job on staying active today! Keep up the momentum." 
+                : "Ready to start your fitness journey today?"}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-3xl font-bold">{dashboardData.todaysStats.caloriesBurned}</p>
+            <p className="text-blue-100">Calories burned today</p>
+          </div>
         </div>
       </div>
 
-      {/* Progress Overview */}
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {quickActions.map((action, index) => (
+          <Link
+            key={index}
+            to={action.href}
+            className="bg-white rounded-xl p-4 shadow-lg border border-gray-100 hover:shadow-xl transition-all"
+          >
+            <div className={`w-12 h-12 ${action.color} rounded-xl flex items-center justify-center mb-3`}>
+              <action.icon className="h-6 w-6 text-white" />
+            </div>
+            <p className="font-medium text-gray-900">{action.name}</p>
+          </Link>
+        ))}
+      </div>
+
+      {/* Today's Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+              <FireIcon className="h-6 w-6 text-red-600" />
+            </div>
+            <ArrowTrendingUpIcon className="h-5 w-5 text-green-500" />
+          </div>
+          <h3 className="text-sm font-medium text-gray-600">Workouts</h3>
+          <p className="text-2xl font-bold text-gray-900">{dashboardData.todaysStats.workoutsCompleted}</p>
+          <p className="text-sm text-gray-500">Completed today</p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <ChartBarIcon className="h-6 w-6 text-blue-600" />
+            </div>
+            <span className="text-sm text-gray-600">
+              {Math.round((dashboardData.todaysStats.caloriesConsumed / 2000) * 100)}%
+            </span>
+          </div>
+          <h3 className="text-sm font-medium text-gray-600">Calories</h3>
+          <p className="text-2xl font-bold text-gray-900">{dashboardData.todaysStats.caloriesConsumed}</p>
+          <p className="text-sm text-gray-500">/ 2000 consumed</p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center">
+              <HeartIcon className="h-6 w-6 text-cyan-600" />
+            </div>
+            <span className="text-sm text-gray-600">
+              {Math.round((dashboardData.todaysStats.waterIntake / 8) * 100)}%
+            </span>
+          </div>
+          <h3 className="text-sm font-medium text-gray-600">Water Intake</h3>
+          <p className="text-2xl font-bold text-gray-900">{dashboardData.todaysStats.waterIntake}</p>
+          <p className="text-sm text-gray-500">/ 8 glasses</p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+              <TrophyIcon className="h-6 w-6 text-purple-600" />
+            </div>
+            <span className="text-sm text-green-600">Good</span>
+          </div>
+          <h3 className="text-sm font-medium text-gray-600">Sleep</h3>
+          <p className="text-2xl font-bold text-gray-900">{dashboardData.todaysStats.sleepHours}h</p>
+          <p className="text-sm text-gray-500">Last night</p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Weekly Progress */}
+<<<<<<< Updated upstream
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Weekly Progress</h2>
           <div className="space-y-4">
@@ -228,21 +278,40 @@ const Dashboard = () => {
                 ></div>
               </div>
             </div>
+=======
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Weekly Progress</h3>
+          <div className="space-y-4">
+            {Object.entries(dashboardData.weeklyGoals).map(([key, goal]) => {
+              const percentage = getProgressPercentage(goal.current, goal.target);
+              return (
+                <div key={key}>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-700 capitalize">
+                      {key === 'calories' ? 'Calories Burned' : key}
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      {goal.current} / {goal.target} {key === 'weight' ? 'kg' : key === 'calories' ? 'cal' : ''}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${percentage}%` }}
+                    ></div>
+                  </div>
+                </div>
+              );
+            })}
+>>>>>>> Stashed changes
           </div>
         </div>
 
-        {/* Recent Workouts */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Workouts</h2>
-            <Link
-              to="/workouts"
-              className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
-            >
-              View all
-            </Link>
-          </div>
+        {/* Recent Activities */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h3>
           <div className="space-y-3">
+<<<<<<< Updated upstream
             {data.recentWorkouts?.slice(0, 3).map((workout, index) => (
               <div key={workout.id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
@@ -274,10 +343,37 @@ const Dashboard = () => {
                 </div>
               </div>
             )}
+=======
+            {dashboardData.recentActivities.map((activity) => (
+              <div key={activity.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  activity.type === 'workout' ? 'bg-red-100' :
+                  activity.type === 'meal' ? 'bg-green-100' : 'bg-blue-100'
+                }`}>
+                  {activity.type === 'workout' && <FireIcon className="h-4 w-4 text-red-600" />}
+                  {activity.type === 'meal' && <HeartIcon className="h-4 w-4 text-green-600" />}
+                  {activity.type === 'water' && <ChartBarIcon className="h-4 w-4 text-blue-600" />}
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">{activity.name}</p>
+                  <p className="text-sm text-gray-600">{activity.time}</p>
+                </div>
+                <div className="text-right">
+                  {activity.calories && (
+                    <p className="text-sm font-medium text-gray-900">{activity.calories} cal</p>
+                  )}
+                  {activity.glasses && (
+                    <p className="text-sm font-medium text-gray-900">{activity.glasses} glasses</p>
+                  )}
+                </div>
+              </div>
+            ))}
+>>>>>>> Stashed changes
           </div>
         </div>
       </div>
 
+<<<<<<< Updated upstream
       {/* Today's Goals */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Today's Goals</h2>
@@ -306,6 +402,58 @@ const Dashboard = () => {
             <p className="text-sm text-gray-500">{data.waterGoal - data.waterIntake} glasses left</p>
           </div>
         </div>
+=======
+      {/* Upcoming Workouts */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Upcoming Workouts</h3>
+          <Link
+            to="/workouts"
+            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+          >
+            View all
+          </Link>
+        </div>
+        
+        {dashboardData.upcomingWorkouts.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {dashboardData.upcomingWorkouts.map((workout) => (
+              <div key={workout.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <CalendarIcon className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{workout.name}</p>
+                    <p className="text-sm text-gray-600">{workout.time} • {workout.duration}</p>
+                  </div>
+                </div>
+                <Link
+                  to="/workouts"
+                  className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors"
+                >
+                  Start
+                </Link>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <CalendarIcon className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No upcoming workouts</h3>
+            <p className="mt-1 text-sm text-gray-500">Schedule your next workout to stay on track.</p>
+            <div className="mt-6">
+              <Link
+                to="/workouts"
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-xl text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg transition-all"
+              >
+                <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
+                Schedule Workout
+              </Link>
+            </div>
+          </div>
+        )}
+>>>>>>> Stashed changes
       </div>
     </div>
   );

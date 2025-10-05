@@ -1,25 +1,21 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import Sidebar from './Sidebar';
 import Header from './Header';
+import Sidebar from './Sidebar';
+import Footer from './Footer';
 
 const Layout = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Sidebar />
-      
-      {/* Main content */}
-      <div className="lg:pl-64">
-        {/* Header */}
+      <div className="ml-64">
         <Header />
-        
-        {/* Page content */}
-        <main className="py-6">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <main className="p-6 min-h-[calc(100vh-140px)]">
+          <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>
         </main>
+        <Footer />
       </div>
     </div>
   );

@@ -29,11 +29,59 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+<<<<<<< Updated upstream
 // CORS middleware
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true
 }));
+=======
+// Only apply rate limiting in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(limiter);
+}
+
+// CORS middleware - more permissive for development
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl requests, etc.)
+    if (!origin) return callback(null, true);
+    
+    // In development, allow any localhost origin
+    if (process.env.NODE_ENV !== 'production') {
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        return callback(null, true);
+      }
+    }
+    
+    // In production, only allow specific origins
+    const allowedOrigins = [
+      process.env.CLIENT_URL || "http://localhost:5173",
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:3000",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:5174",
+      "http://127.0.0.1:3000"
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+>>>>>>> Stashed changes
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -91,6 +139,7 @@ app.use('*', (req, res) => {
 // Database connection
 const connectDB = async () => {
   try {
+<<<<<<< Updated upstream
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/nutrifit', {
       connectTimeoutMS: 10000, // 10 second timeout
       serverSelectionTimeoutMS: 10000, // 10 second timeout
@@ -98,6 +147,11 @@ const connectDB = async () => {
       retryWrites: true,
       w: 'majority'
     });
+=======
+    const conn = await mongoose.connect(
+      process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/nutrifit"
+    );
+>>>>>>> Stashed changes
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     return true;
   } catch (error) {
