@@ -144,7 +144,6 @@ const userSchema = new mongoose.Schema({
 });
 
 // Indexes for better performance
-userSchema.index({ email: 1 });
 userSchema.index({ createdAt: -1 });
 
 // Virtual for BMI calculation

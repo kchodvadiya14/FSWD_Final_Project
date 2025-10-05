@@ -29,87 +29,15 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-<<<<<<< Updated upstream
 // CORS middleware
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true
 }));
-=======
-// Only apply rate limiting in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(limiter);
-}
-
-// CORS middleware - more permissive for development
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl requests, etc.)
-    if (!origin) return callback(null, true);
-    
-    // In development, allow any localhost origin
-    if (process.env.NODE_ENV !== 'production') {
-      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-        return callback(null, true);
-      }
-    }
-    
-    // In production, only allow specific origins
-    const allowedOrigins = [
-      process.env.CLIENT_URL || "http://localhost:5173",
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "http://localhost:3000",
-      "http://127.0.0.1:5173",
-      "http://127.0.0.1:5174",
-      "http://127.0.0.1:3000"
-    ];
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  optionsSuccessStatus: 200
-};
-
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
->>>>>>> Stashed changes
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-
-// Health check endpoint (before database middleware)
-app.get('/api/health', (req, res) => {
-  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
-  res.status(200).json({
-    status: 'OK',
-    message: 'NutriFit API is running',
-    database: dbStatus,
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Database connection check middleware (only for routes that need database)
-const dbRoutes = ['/api/auth', '/api/users', '/api/workouts', '/api/nutrition', '/api/metrics'];
-app.use(dbRoutes, (req, res, next) => {
-  if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json({
-      success: false,
-      message: 'Database connection not available. Please try again later.',
-      code: 'DB_UNAVAILABLE'
-    });
-  }
-  next();
-});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -117,6 +45,15 @@ app.use('/api/users', userRoutes);
 app.use('/api/workouts', workoutRoutes);
 app.use('/api/nutrition', nutritionRoutes);
 app.use('/api/metrics', metricsRoutes);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    message: 'NutriFit API is running',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -139,34 +76,30 @@ app.use('*', (req, res) => {
 // Database connection
 const connectDB = async () => {
   try {
-<<<<<<< Updated upstream
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/nutrifit', {
-      connectTimeoutMS: 10000, // 10 second timeout
-      serverSelectionTimeoutMS: 10000, // 10 second timeout
+      connectTimeoutMS: 10000, // 10 second timeout for Atlas
+      serverSelectionTimeoutMS: 10000, // 10 second timeout for Atlas
       maxPoolSize: 10, // Maintain up to 10 socket connections
-      retryWrites: true,
-      w: 'majority'
+      serverApi: {
+        version: '1',
+        strict: true,
+        deprecationErrors: true,
+      }
     });
-=======
-    const conn = await mongoose.connect(
-      process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/nutrifit"
-    );
->>>>>>> Stashed changes
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     return true;
   } catch (error) {
     console.error('❌ Error connecting to MongoDB:', error.message);
-    return false;
+    throw error; // Let the caller handle the error
   }
 };
 
 // Start server
 const startServer = async () => {
-  const dbConnected = await connectDB();
-  
-  if (dbConnected) {
+  try {
+    await connectDB();
     console.log('✅ MongoDB connected successfully');
-  } else {
+  } catch (error) {
     console.log('❌ MongoDB connection failed, starting server without database');
     console.log('📝 You can set up MongoDB later and restart the server');
     console.log('🔧 To fix this: Install and start MongoDB locally or use MongoDB Atlas');
@@ -175,7 +108,7 @@ const startServer = async () => {
   app.listen(PORT, () => {
     console.log(`🚀 NutriFit Server running on port ${PORT}`);
     console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🌐 Client URL: ${process.env.CLIENT_URL || 'http://localhost:5174'}`);
+    console.log(`🌐 Client URL: ${process.env.CLIENT_URL || 'http://localhost:5173'}`);
     console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
   });
 };
