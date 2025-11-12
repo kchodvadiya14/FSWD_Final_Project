@@ -8,10 +8,15 @@ import {
   ScaleIcon,
   DocumentChartBarIcon,
   UserIcon,
+  UsersIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   XMarkIcon,
-  Bars3Icon
+  Bars3Icon,
+  SparklesIcon,
+  CakeIcon,
+  FlagIcon,
+  BellIcon
 } from '@heroicons/react/24/outline';
 
 const Sidebar = () => {
@@ -22,6 +27,11 @@ const Sidebar = () => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
     { name: 'Workouts', href: '/workouts', icon: ChartBarIcon },
+    { name: 'Nutrition', href: '/nutrition', icon: CakeIcon },
+    { name: 'Goals', href: '/goals', icon: FlagIcon },
+    { name: 'Reminders', href: '/reminders', icon: BellIcon },
+    { name: 'AI Coach', href: '/ai-coach', icon: SparklesIcon },
+    { name: 'Community', href: '/community', icon: UsersIcon },
     { name: 'Health Metrics', href: '/health', icon: ScaleIcon },
     { name: 'Progress', href: '/progress', icon: DocumentChartBarIcon },
     { name: 'Profile', href: '/profile', icon: UserIcon },

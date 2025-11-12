@@ -13,6 +13,7 @@ import nutritionRoutes from "./routes/nutrition.js";
 import metricsRoutes from "./routes/metrics.js";
 import exerciseRoutes from "./routes/exercises.js";
 import goalRoutes from "./routes/goals.js";
+import aiRoutes from "./routes/ai.js";
 
 // Load environment variables
 dotenv.config();
@@ -91,6 +92,7 @@ app.use("/api/nutrition", nutritionRoutes);
 app.use("/api/metrics", metricsRoutes);
 app.use("/api/exercises", exerciseRoutes);
 app.use("/api/goals", goalRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

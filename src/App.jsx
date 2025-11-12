@@ -17,6 +17,10 @@ import HealthMetrics from './pages/HealthMetrics';
 import Progress from './pages/Progress';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import AIChat from './pages/AIChat';
+import Goals from './pages/Goals';
+import Reminders from './pages/Reminders';
+import Social from './pages/Social';
 
 // Placeholder components for routes that aren't implemented yet
 const PlaceholderPage = ({ title }) => (
@@ -153,6 +157,50 @@ function App() {
               }
             >
               <Route index element={<Settings />} />
+            </Route>
+
+            <Route 
+              path="/ai-coach" 
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AIChat />} />
+            </Route>
+
+            <Route 
+              path="/goals" 
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Goals />} />
+            </Route>
+
+            <Route 
+              path="/reminders" 
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Reminders />} />
+            </Route>
+
+            <Route 
+              path="/community" 
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Social />} />
             </Route>
 
             {/* Catch all route */}

@@ -38,20 +38,31 @@ const Nutrition = () => {
         filteredEntries = entries.filter(entry => entry.mealType === filters.mealType);
       }
       
-      // Apply sorting
+      // Sort entries
       filteredEntries.sort((a, b) => {
-        if (filters.sortBy === 'createdAt') {
-          const dateA = new Date(a.createdAt || a.date);
-          const dateB = new Date(b.createdAt || b.date);
-          return filters.sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+        const aValue = filters.sortBy === 'createdAt' 
+          ? new Date(a.createdAt).getTime()
+          : filters.sortBy === 'totalNutrition.calories'
+          ? (a.totalNutrition?.calories || a.calories || 0)
+          : a[filters.sortBy] || '';
+          
+        const bValue = filters.sortBy === 'createdAt'
+          ? new Date(b.createdAt).getTime()
+          : filters.sortBy === 'totalNutrition.calories'
+          ? (b.totalNutrition?.calories || b.calories || 0)
+          : b[filters.sortBy] || '';
+        
+        if (filters.sortOrder === 'desc') {
+          return bValue > aValue ? 1 : -1;
+        } else {
+          return aValue > bValue ? 1 : -1;
         }
-        return 0;
       });
       
       setNutritionEntries(filteredEntries);
     } catch (error) {
-      console.error('Failed to fetch nutrition entries:', error);
-      toast.error('Failed to load nutrition data');
+      console.error('Error fetching nutrition entries:', error);
+      toast.error('Failed to load nutrition entries');
     } finally {
       setLoading(false);
     }
@@ -59,53 +70,87 @@ const Nutrition = () => {
 
   const fetchNutritionStats = async () => {
     try {
-      const stats = fitnessDataManager.getNutritionStats(selectedDate);
-      setStats(stats);
+      const weeklyStats = fitnessDataManager.getNutritionStats(7);
+      setStats(weeklyStats);
     } catch (error) {
-      console.error('Failed to fetch nutrition stats:', error);
+      console.error('Error fetching nutrition stats:', error);
     }
   };
 
-  const handleDeleteEntry = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this nutrition entry?')) {
-      return;
-    }
-
-    try {
-      const success = fitnessDataManager.deleteNutritionEntry(id);
-      if (success) {
+  const handleDeleteEntry = async (entryId) => {
+    if (window.confirm('Are you sure you want to delete this nutrition entry?')) {
+      try {
+        fitnessDataManager.deleteNutritionEntry(entryId);
+        setNutritionEntries(prev => prev.filter(entry => entry._id !== entryId));
         toast.success('Nutrition entry deleted successfully');
-        fetchNutritionEntries();
-        fetchNutritionStats();
-      } else {
+        fetchNutritionStats(); // Refresh stats
+      } catch (error) {
+        console.error('Error deleting nutrition entry:', error);
         toast.error('Failed to delete nutrition entry');
       }
-    } catch (error) {
-      console.error('Failed to delete nutrition entry:', error);
-      toast.error('Failed to delete nutrition entry');
     }
   };
 
-  const getMealTypeColor = (type) => {
+  const getMealTypeColor = (mealType) => {
     const colors = {
       breakfast: 'bg-yellow-100 text-yellow-800',
       lunch: 'bg-green-100 text-green-800',
       dinner: 'bg-blue-100 text-blue-800',
       snack: 'bg-purple-100 text-purple-800'
     };
-    return colors[type] || 'bg-gray-100 text-gray-800';
+    return colors[mealType] || 'bg-gray-100 text-gray-800';
   };
 
+  // Enhanced nutrition calculation that handles both old and new entry formats
   const getTotalNutrition = () => {
     return nutritionEntries.reduce((totals, entry) => {
+      // Handle both old entries with simple calories and new entries with detailed nutrition
+      const entryNutrition = entry.totalNutrition || entry.nutrition || {};
+      const entryCalories = entryNutrition.calories || entry.calories || 0;
+      
       return {
-        calories: totals.calories + (entry.totalNutrition?.calories || 0),
-        protein: totals.protein + (entry.totalNutrition?.protein || 0),
-        carbs: totals.carbs + (entry.totalNutrition?.carbs || 0),
-        fats: totals.fats + (entry.totalNutrition?.fats || 0),
-        fiber: totals.fiber + (entry.totalNutrition?.fiber || 0)
+        calories: totals.calories + entryCalories,
+        protein: totals.protein + (entryNutrition.protein || 0),
+        carbs: totals.carbs + (entryNutrition.carbs || 0),
+        fats: totals.fats + (entryNutrition.fats || 0),
+        fiber: totals.fiber + (entryNutrition.fiber || 0),
+        sugar: totals.sugar + (entryNutrition.sugar || 0),
+        sodium: totals.sodium + (entryNutrition.sodium || 0)
       };
-    }, { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 });
+    }, { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0, sugar: 0, sodium: 0 });
+  };
+
+  // Calculate nutrition for individual food items
+  const calculateEntryNutrition = (entry) => {
+    if (entry.totalNutrition) {
+      return entry.totalNutrition;
+    }
+    
+    if (entry.foodItems && entry.foodItems.length > 0) {
+      return entry.foodItems.reduce((totals, item) => {
+        const nutrition = item.nutrition || {};
+        return {
+          calories: totals.calories + (nutrition.calories || 0),
+          protein: totals.protein + (nutrition.protein || 0),
+          carbs: totals.carbs + (nutrition.carbs || 0),
+          fats: totals.fats + (nutrition.fats || 0),
+          fiber: totals.fiber + (nutrition.fiber || 0),
+          sugar: totals.sugar + (nutrition.sugar || 0),
+          sodium: totals.sodium + (nutrition.sodium || 0)
+        };
+      }, { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0, sugar: 0, sodium: 0 });
+    }
+    
+    // Fallback for old entries
+    return {
+      calories: entry.calories || 0,
+      protein: entry.protein || 0,
+      carbs: entry.carbs || 0,
+      fats: entry.fats || 0,
+      fiber: 0,
+      sugar: 0,
+      sodium: 0
+    };
   };
 
   const dailyTotals = getTotalNutrition();
@@ -267,74 +312,96 @@ const Nutrition = () => {
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
-            {nutritionEntries.map((entry) => (
-              <div key={entry._id} className="p-6 hover:bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getMealTypeColor(entry.mealType)}`}>
-                        {entry.mealType}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        {new Date(entry.createdAt).toLocaleTimeString()}
-                      </span>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      {entry.foodItems.map((item, index) => (
-                        <div key={index} className="flex justify-between items-center">
-                          <div>
-                            <span className="font-medium text-gray-900">{item.name}</span>
-                            {item.brand && <span className="text-gray-500 ml-2">({item.brand})</span>}
-                            <div className="text-sm text-gray-500">
-                              {item.quantity.value} {item.quantity.unit}
+            {nutritionEntries.map((entry) => {
+              const entryNutrition = calculateEntryNutrition(entry);
+              
+              return (
+                <div key={entry._id} className="p-6 hover:bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getMealTypeColor(entry.mealType)}`}>
+                          {entry.mealType}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {new Date(entry.createdAt).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        {/* Handle both old format (entry.food) and new format (entry.foodItems) */}
+                        {entry.foodItems ? entry.foodItems.map((item, index) => (
+                          <div key={index} className="flex justify-between items-center">
+                            <div>
+                              <span className="font-medium text-gray-900">{item.name}</span>
+                              {item.brand && <span className="text-gray-500 ml-2">({item.brand})</span>}
+                              <div className="text-sm text-gray-500">
+                                {item.quantity.value} {item.quantity.unit}
+                              </div>
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {Math.round(item.nutrition?.calories || 0)} cal
                             </div>
                           </div>
-                          <div className="text-sm text-gray-600">
-                            {Math.round(item.nutrition.calories)} cal
+                        )) : (
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <span className="font-medium text-gray-900">{entry.food}</span>
+                              <div className="text-sm text-gray-500">
+                                {entry.servingSize || 'N/A'}
+                              </div>
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {Math.round(entry.calories || 0)} cal
+                            </div>
                           </div>
+                        )}
+                      </div>
+
+                      <div className="mt-3 flex items-center gap-6 text-sm text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <FireIcon className="h-4 w-4" />
+                          {Math.round(entryNutrition.calories)} cal
                         </div>
-                      ))}
+                        <div>
+                          P: {Math.round(entryNutrition.protein)}g
+                        </div>
+                        <div>
+                          C: {Math.round(entryNutrition.carbs)}g
+                        </div>
+                        <div>
+                          F: {Math.round(entryNutrition.fats)}g
+                        </div>
+                        {entryNutrition.fiber > 0 && (
+                          <div>
+                            Fiber: {Math.round(entryNutrition.fiber)}g
+                          </div>
+                        )}
+                      </div>
+
+                      {entry.notes && (
+                        <p className="mt-2 text-sm text-gray-600 italic">{entry.notes}</p>
+                      )}
                     </div>
 
-                    <div className="mt-3 flex items-center gap-6 text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <FireIcon className="h-4 w-4" />
-                        {Math.round(entry.totalNutrition?.calories || 0)} cal
-                      </div>
-                      <div>
-                        P: {Math.round(entry.totalNutrition?.protein || 0)}g
-                      </div>
-                      <div>
-                        C: {Math.round(entry.totalNutrition?.carbs || 0)}g
-                      </div>
-                      <div>
-                        F: {Math.round(entry.totalNutrition?.fats || 0)}g
-                      </div>
+                    <div className="flex items-center gap-2 ml-4">
+                      <Link
+                        to={`/nutrition/${entry._id}/edit`}
+                        className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => handleDeleteEntry(entry._id)}
+                        className="text-red-600 hover:text-red-900 text-sm font-medium"
+                      >
+                        Delete
+                      </button>
                     </div>
-
-                    {entry.notes && (
-                      <p className="mt-2 text-sm text-gray-600 italic">{entry.notes}</p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 ml-4">
-                    <Link
-                      to={`/nutrition/${entry._id}/edit`}
-                      className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      onClick={() => handleDeleteEntry(entry._id)}
-                      className="text-red-600 hover:text-red-900 text-sm font-medium"
-                    >
-                      Delete
-                    </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

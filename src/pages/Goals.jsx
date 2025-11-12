@@ -3,7 +3,7 @@ import { goalService } from '../services/fitnessService';
 import toast from 'react-hot-toast';
 import {
   PlusIcon,
-  TargetIcon,
+  FlagIcon,
   ChartBarIcon,
   ClockIcon,
   CheckCircleIcon,
@@ -144,12 +144,12 @@ const Goals = () => {
 
   const getStatusIcon = (status) => {
     const icons = {
-      active: TargetIcon,
+      active: FlagIcon,
       completed: CheckCircleIcon,
       paused: PauseCircleIcon,
       cancelled: XCircleIcon
     };
-    const Icon = icons[status] || TargetIcon;
+    const Icon = icons[status] || FlagIcon;
     return <Icon className="h-4 w-4" />;
   };
 
@@ -237,7 +237,7 @@ const Goals = () => {
       <div className="space-y-4">
         {filteredGoals.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow">
-            <TargetIcon className="mx-auto h-12 w-12 text-gray-400" />
+            <FlagIcon className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">No goals found</h3>
             <p className="mt-1 text-sm text-gray-500">
               {filter === 'all' 
