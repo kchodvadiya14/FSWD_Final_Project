@@ -24,6 +24,9 @@ const userSchema = new mongoose.Schema({
   },
   
   // Profile Information
+  dateOfBirth: {
+    type: Date
+  },
   profile: {
     age: {
       type: Number,
@@ -58,13 +61,18 @@ const userSchema = new mongoose.Schema({
     },
     activityLevel: {
       type: String,
-      enum: ['sedentary', 'lightly_active', 'moderately_active', 'very_active', 'super_active'],
+      enum: ['sedentary', 'lightly_active', 'moderately_active', 'very_active', 'extra_active'],
       default: 'moderately_active'
     },
     fitnessGoal: {
       type: String,
       enum: ['lose_weight', 'maintain_weight', 'gain_weight', 'build_muscle', 'improve_fitness'],
       default: 'maintain_weight'
+    },
+    bio: {
+      type: String,
+      maxlength: [500, 'Bio cannot exceed 500 characters'],
+      default: ''
     }
   },
 

@@ -15,7 +15,7 @@ export const register = async (req, res) => {
       });
     }
 
-    const { name, email, password, profile } = req.body;
+    const { name, email, password, dateOfBirth, gender, height, weight, fitnessGoal, activityLevel } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findByEmail(email);
@@ -26,12 +26,32 @@ export const register = async (req, res) => {
       });
     }
 
+    // Calculate age from dateOfBirth if provided
+    let age = null;
+    if (dateOfBirth) {
+      const birthDate = new Date(dateOfBirth);
+      const today = new Date();
+      age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+    }
+
     // Create new user
     const userData = {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password,
-      profile: profile || {}
+      dateOfBirth: dateOfBirth || undefined,
+      profile: {
+        age: age || undefined,
+        gender: gender ? gender.toLowerCase() : undefined,
+        height: height ? { value: parseFloat(height), unit: 'cm' } : undefined,
+        currentWeight: weight ? { value: parseFloat(weight), unit: 'kg' } : undefined,
+        fitnessGoal: fitnessGoal || 'maintain_weight',
+        activityLevel: activityLevel || 'moderately_active'
+      }
     };
 
     const user = new User(userData);

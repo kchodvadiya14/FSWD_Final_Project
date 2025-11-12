@@ -24,6 +24,8 @@ const Nutrition = () => {
     fats: 0
   });
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showAIPlan, setShowAIPlan] = useState(false);
+  const [aiMealPlan, setAiMealPlan] = useState(null);
   const [newMeal, setNewMeal] = useState({
     name: '',
     type: 'breakfast',
@@ -127,9 +129,9 @@ const Nutrition = () => {
         dailyCalories: dailyGoals.calories
       });
       
-      toast.success('AI nutrition plan generated!');
-      // You can display the plan in a modal or new section
-      console.log('Generated plan:', plan);
+      setAiMealPlan(plan);
+      setShowAIPlan(true);
+      toast.success('AI nutrition plan generated! 🍽️');
     } catch (error) {
       toast.error('Failed to generate nutrition plan');
     }
@@ -137,6 +139,16 @@ const Nutrition = () => {
 
   const getProgressPercentage = (consumed, goal) => {
     return goal > 0 ? Math.min((consumed / goal) * 100, 100) : 0;
+  };
+
+  const getMealIcon = (mealType) => {
+    const icons = {
+      breakfast: '🌅',
+      lunch: '☀️',
+      dinner: '🌙',
+      snack: '🍎'
+    };
+    return icons[mealType] || '🍽️';
   };
 
   const macroCards = [
@@ -392,6 +404,118 @@ const Nutrition = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* AI Meal Plan Modal */}
+      {showAIPlan && aiMealPlan && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 rounded-t-2xl">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">✨ Your AI Meal Plan</h2>
+                  <p className="text-purple-100">Personalized nutrition plan for your goals</p>
+                </div>
+                <button
+                  onClick={() => setShowAIPlan(false)}
+                  className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Daily Summary */}
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">📊 Daily Nutrition Targets</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-white rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-red-600">{aiMealPlan.dailyCalories}</p>
+                    <p className="text-sm text-gray-600">Calories</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-blue-600">{aiMealPlan.dailyProtein}g</p>
+                    <p className="text-sm text-gray-600">Protein</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-green-600">{aiMealPlan.dailyCarbs}g</p>
+                    <p className="text-sm text-gray-600">Carbs</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-yellow-600">{aiMealPlan.dailyFats}g</p>
+                    <p className="text-sm text-gray-600">Fats</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Meals */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-gray-900">🍽️ Today's Meal Plan</h3>
+                
+                {aiMealPlan.meals.map((meal, index) => (
+                  <div key={index} className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="text-2xl">{getMealIcon(meal.type)}</span>
+                          <h4 className="text-lg font-bold text-gray-900 capitalize">{meal.type}</h4>
+                        </div>
+                        <p className="text-sm text-gray-600">{meal.time}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-gray-900">{meal.calories}</p>
+                        <p className="text-sm text-gray-600">calories</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {meal.items.map((item, itemIndex) => (
+                        <div key={itemIndex} className="bg-white rounded-lg p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <h5 className="font-semibold text-gray-900">{item.name}</h5>
+                            <span className="text-sm text-gray-600">{item.portion}</span>
+                          </div>
+                          <div className="flex space-x-4 text-sm text-gray-600">
+                            <span>🔵 Protein: {item.protein}g</span>
+                            <span>🟢 Carbs: {item.carbs}g</span>
+                            <span>🟡 Fats: {item.fats}g</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Tips */}
+              {aiMealPlan.tips && aiMealPlan.tips.length > 0 && (
+                <div className="bg-blue-50 rounded-xl p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">💡 Nutrition Tips</h3>
+                  <ul className="space-y-2">
+                    {aiMealPlan.tips.map((tip, index) => (
+                      <li key={index} className="flex items-start space-x-2">
+                        <span className="text-blue-600 mt-1">•</span>
+                        <span className="text-gray-700">{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowAIPlan(false)}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-lg transition-all"
+                >
+                  Got it! 👍
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

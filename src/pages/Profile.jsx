@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   UserIcon, 
@@ -13,16 +13,33 @@ const Profile = () => {
   const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    dateOfBirth: user?.profile?.dateOfBirth || '',
-    gender: user?.profile?.gender || '',
-    height: user?.profile?.height?.value || '',
-    currentWeight: user?.profile?.currentWeight?.value || '',
-    fitnessGoal: user?.profile?.fitnessGoal || '',
-    activityLevel: user?.profile?.activityLevel || '',
-    bio: user?.profile?.bio || ''
+    name: '',
+    email: '',
+    dateOfBirth: '',
+    gender: '',
+    height: '',
+    currentWeight: '',
+    fitnessGoal: '',
+    activityLevel: '',
+    bio: ''
   });
+
+  // Update formData when user data changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user?.name || '',
+        email: user?.email || '',
+        dateOfBirth: user?.dateOfBirth || user?.profile?.dateOfBirth || '',
+        gender: user?.profile?.gender || '',
+        height: user?.profile?.height?.value || '',
+        currentWeight: user?.profile?.currentWeight?.value || '',
+        fitnessGoal: user?.profile?.fitnessGoal || '',
+        activityLevel: user?.profile?.activityLevel || '',
+        bio: user?.profile?.bio || ''
+      });
+    }
+  }, [user]);
 
   const fitnessGoals = [
     { value: 'lose_weight', label: 'Lose Weight' },
@@ -103,7 +120,7 @@ const Profile = () => {
     setFormData({
       name: user?.name || '',
       email: user?.email || '',
-      dateOfBirth: user?.profile?.dateOfBirth || '',
+      dateOfBirth: user?.dateOfBirth || user?.profile?.dateOfBirth || '',
       gender: user?.profile?.gender || '',
       height: user?.profile?.height?.value || '',
       currentWeight: user?.profile?.currentWeight?.value || '',
